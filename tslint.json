@@ -1,0 +1,16 @@
+{
+    "extends": "tslint:all",
+    "rules": {
+        "trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
+        "quotemark": [true, "single", "jsx-double"],
+        "typedef": [
+            true,
+            "call-signature",
+            "arrow-call-signature",
+            "parameter",
+            "arrow-parameter",
+            "property-declaration"
+        ],
+        "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}]
+    }
+}
