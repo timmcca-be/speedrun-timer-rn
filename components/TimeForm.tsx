@@ -21,7 +21,7 @@ export class TimeForm extends Component<IProps, IState> {
   public constructor(props: IProps) {
     super(props);
     this.state = {
-      time: 0
+      time: 0,
     };
   }
 
@@ -43,7 +43,7 @@ export class TimeForm extends Component<IProps, IState> {
    */
   private changeTime(value: string): void {
     this.setState({
-      time: parseFloat(value)
+      time: parseFloat(value),
     });
   }
 

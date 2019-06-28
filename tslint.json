@@ -1,7 +1,6 @@
 {
     "extends": "tslint:all",
     "rules": {
-        "trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
         "quotemark": [true, "single", "jsx-double"],
         "typedef": [
             true,
@@ -11,6 +10,8 @@
             "arrow-parameter",
             "property-declaration"
         ],
-        "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}]
+        "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}],
+        "no-use-before-declare": false,
+        "align": false
     }
 }

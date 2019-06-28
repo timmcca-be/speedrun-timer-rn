@@ -46,7 +46,7 @@ export class App extends Component<{}, IState> {
     this.state = {
       active: false,
       endTime: 0,
-      remainingSeconds: 0
+      remainingSeconds: 0,
     };
   }
 
@@ -63,7 +63,7 @@ export class App extends Component<{}, IState> {
   /** Stop timer */
   private endTimer(): void {
     this.setState({
-      active: false
+      active: false,
     });
   }
 
@@ -75,35 +75,38 @@ export class App extends Component<{}, IState> {
     this.setState({
       active: true,
       endTime: Date.now() + seconds * MS_PER_SEC,
-      remainingSeconds: Math.ceil(seconds)
-    // tslint:disable-next-line:align
-    }, () => {
-      setTimeout(this.updateTime.bind(this), (this.state.endTime - Date.now()) % MS_PER_SEC);
-    });
+      remainingSeconds: Math.ceil(seconds),
+    }, this.updateTime.bind(this));
   }
 
   /**
    * Recursive function that updates the time until it reaches zero
    */
   private updateTime(): void {
-    this.setState({
-      remainingSeconds: this.state.remainingSeconds - 1
-    // tslint:disable-next-line:align
-    }, () => {
-      if (this.state.remainingSeconds === 0) {
-        this.endTimer();
+    if (!this.state.active) {
+      return;
+    }
+    const remainingTime = this.state.endTime - Date.now();
+    if (remainingTime <= 0) {
+      this.setState({
+        active: false,
+        remainingSeconds: 0,
+      });
+      // No need to track the sound playing here
+      // tslint:disable-next-line:no-floating-promises
+      playSound(ding);
 
-        return playSound(ding);
-      }
-      if (this.state.remainingSeconds <= NUM_TICKS) {
-        // No need to track the sound playing here
+      return;
+    }
+    const remainingSeconds = Math.ceil(remainingTime / MS_PER_SEC);
+    if (remainingSeconds < this.state.remainingSeconds) {
+      if (remainingSeconds <= NUM_TICKS) {
         // tslint:disable-next-line:no-floating-promises
         playSound(tick);
       }
-      if (this.state.active) {
-        setTimeout(this.updateTime.bind(this),
-                   (this.state.endTime - Date.now()) - (this.state.remainingSeconds - 1) * MS_PER_SEC);
-      }
-    });
+      this.setState({ remainingSeconds }, this.updateTime.bind(this));
+    } else {
+      setTimeout(this.updateTime.bind(this));
+    }
   }
 }

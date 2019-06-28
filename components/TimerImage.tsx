@@ -2,12 +2,12 @@
 /* tslint:disable:no-magic-numbers */
 
 import React, { Component, ReactElement } from 'react';
-import { Animated, Dimensions, Easing } from 'react-native';
-import Svg, { Circle, Defs, Line, Mask, Path, Rect, Text } from 'react-native-svg';
+import { Animated, Dimensions, Easing, Platform } from 'react-native';
+import Svg, { Circle, ClipPath, Defs, G, Line, Rect, Text } from 'react-native-svg';
 // Not my library, not my monkeys
 /* tslint:disable:variable-name no-any no-unsafe-any */
-const AnimatedPath: React.ComponentClass<any> = Animated.createAnimatedComponent(Path);
-const AnimatedLine: React.ComponentClass<any> = Animated.createAnimatedComponent(Line);
+const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedComponent(Circle);
+const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
 /* tslint:enable:variable-name no-any no-unsafe-any */
 
 /** Tick on timer */
@@ -40,52 +40,25 @@ for (let i = 0; i < 60; i += 1) {
   const sin: number = Math.sin(rad);
   if (i % 5 === 0) {
     bigTicks[i / 5] = {
-      x1: cos * 28 + 50,
-      y1: sin * 28 + 50,
+      x1: cos * 28,
+      y1: sin * 28,
       // tslint:disable-next-line:object-literal-sort-keys
-      x2: cos * 17 + 50,
-      y2: sin * 17 + 50
+      x2: cos * 17,
+      y2: sin * 17,
     };
     labels[i / 5] = {
-      x: (sin * 33 + 50).toFixed(4),
-      y: (50 - cos * 33).toFixed(4)
+      x: (sin * 33).toFixed(4),
+      y: (-cos * 33).toFixed(4),
     };
   } else {
     smallTicks[i - Math.floor(i / 5)] = {
-      x1: cos * 28 + 50,
-      y1: sin * 28 + 50,
+      x1: cos * 28,
+      y1: sin * 28,
       // tslint:disable-next-line:object-literal-sort-keys
-      x2: cos * 24 + 50,
-      y2: sin * 24 + 50
+      x2: cos * 24,
+      y2: sin * 24,
     };
   }
-}
-
-const NUM_KEYFRAMES = 120;
-
-/** Endpoint of animated timer line */
-interface ILinePoint {
-  /** x coordinate */
-  x: number;
-  /** y coordinate */
-  y: number;
-}
-
-// 0 to 1 in NUM_KEYFRAMES + 1 evenly-spaced steps
-const inputRange: number[] = new Array(NUM_KEYFRAMES + 1);
-// Index NUM_KEYFRAMES is the path at time 0, time goes up as the index decreases
-const circlePaths: string[] = new Array(NUM_KEYFRAMES + 1);
-const lineXCoordinates: number[] = new Array(NUM_KEYFRAMES + 1);
-const lineYCoordinates: number[] = new Array(NUM_KEYFRAMES + 1);
-for (let i = 0; i <= NUM_KEYFRAMES; i += 1) {
-  inputRange[i] = i;
-  const rad: number = (NUM_KEYFRAMES - i) * Math.PI * 2 / NUM_KEYFRAMES;
-  const cos: number = Math.cos(rad);
-  const sin: number = Math.sin(rad);
-  lineXCoordinates[i] = sin * 32.3 + 50;
-  lineYCoordinates[i] = 50 - cos * 32.3;
-  circlePaths[i] = `M50 50L50 19A31 31 0 ${i <= 60 ? '1' : '0'} 1 \
-    ${(sin * 31 + 50).toFixed(4)} ${(50 - cos * 31).toFixed(4)}`;
 }
 
 /** String to string key-value map for color names */
@@ -96,8 +69,20 @@ const colors: IColors = {
   black: '#2d2d2b',
   gray: '#aaa5a2',
   red: '#ff2e00',
-  white: '#f1f1f1'
+  white: '#f1f1f1',
 };
+
+const angleAnim = new Animated.Value(1);
+const angleTransform = angleAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: ['360deg', '0deg'],
+});
+
+const secondHalfCircleOpacity = new Animated.Value(1);
+const firstHalfCircleOpacity = secondHalfCircleOpacity.interpolate({
+  inputRange: [0, 1],
+  outputRange: [1, 0],
+});
 
 interface IProps {
   /** Timer is currently counting down */
@@ -107,100 +92,124 @@ interface IProps {
   /** Number of remaining seconds on timer, rounded up */
   remainingSeconds: number;
 }
-interface IState {
-  /** Animates paths and controls animation flow */
-  anim: Animated.Value;
-  /** Animated path for red timer circle */
-  circlePath: Animated.AnimatedInterpolation;
-  /** Animated x coordinate for red timer line */
-  lineXCoordinate: Animated.AnimatedInterpolation;
-  /** Animated y coordinate for red timer line */
-  lineYCoordinate: Animated.AnimatedInterpolation;
-}
-
 /** SVG image representation of timer with a live display */
-export class TimerImage extends Component<IProps, IState> {
-  public constructor(props: IProps) {
-    super(props);
-    const anim: Animated.Value = new Animated.Value(120);
-    this.state = {
-      anim,
-      circlePath: anim.interpolate({
-        inputRange,
-        outputRange: circlePaths
-      }),
-      lineXCoordinate: anim.interpolate({
-        inputRange,
-        outputRange: lineXCoordinates
-      }),
-      lineYCoordinate: anim.interpolate({
-        inputRange,
-        outputRange: lineYCoordinates
-      })
-    };
-  }
-
+export class TimerImage extends Component<IProps> {
   /**
    * If the timer was just activated, start the animation. If it was just deactivated, stop the animation.
    * @param prevProps previous props
    */
   public componentDidUpdate(prevProps: IProps): void {
     if (!this.props.active && this.props.remainingSeconds !== 0) {
-      this.state.anim.stopAnimation();
+      angleAnim.stopAnimation();
+      secondHalfCircleOpacity.stopAnimation();
     } else if (this.props.active && !prevProps.active) {
-      const remainingTime: number = this.props.endTime - Date.now();
-      this.state.anim.setValue(120 - remainingTime / 500);
-      Animated.timing(this.state.anim, {
+      const remainingTime = this.props.endTime - Date.now();
+      const start = 1 - remainingTime / 60000;
+      angleAnim.setValue(start);
+      const angleAnimation = Animated.timing(angleAnim, {
         duration: remainingTime,
         easing: Easing.linear,
-        toValue: 120,
-        useNativeDriver: true
-      })
-      .start();
+        toValue: 1,
+        useNativeDriver: true,
+      });
+      if (remainingTime > 30000) {
+        secondHalfCircleOpacity.setValue(0);
+        Animated.parallel([
+          angleAnimation,
+          Animated.sequence([
+            Animated.delay(remainingTime - 30000),
+            Animated.timing(secondHalfCircleOpacity, {
+              duration: 0,
+              toValue: 1,
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+        .start();
+      } else {
+        angleAnimation.start();
+      }
     }
   }
 
   /** Create and return the timer SVG */
   public render(): ReactElement {
     const size: number = Dimensions.get('window').width * 0.9;
+    const offsetAndroid = Platform.OS === 'android' ? size / 2 : 0;
 
     return (
-      <Svg width={size} height={size} viewBox="0 0 100 100" style={{ margin: '5%' }}>
+      <Svg width={size} height={size} viewBox="-50 -50 100 100" style={{ margin: '5%' }}>
         <Defs>
-          <Mask id="sliverMask">
+          <ClipPath id="leftCircleClip">
             <Rect
-              x={49.5} y={0}
-              width={1} height={50}
-              fill="#ffffff" />
-          </Mask>
+              x={-50} y={-50}
+              width={50} height={100} />
+          </ClipPath>
+          <ClipPath id="rightCircleClip">
+            <Rect
+              x={0} y={-50}
+              width={50} height={100} />
+          </ClipPath>
+          <ClipPath id="sliverClip">
+            <Rect
+              x={-0.5} y={-50}
+              width={1} height={50} />
+          </ClipPath>
         </Defs>
         <Circle
-          cx={50} cy={50} r={50}
+          cx={0} cy={0} r={50}
           fill={colors.gray} />
         <Circle
-          cx={50} cy={50} r={46}
+          cx={0} cy={0} r={46}
           fill={colors.black} />
         <Circle
-          cx={50} cy={50} r={43}
+          cx={0} cy={0} r={43}
           fill={colors.white} />
+        <AnimatedCircle
+          cx={0} cy={0} r={31}
+          clipPath="url(#leftCircleClip)"
+          fill={colors.red}
+          opacity={firstHalfCircleOpacity} />
+        <AnimatedCircle
+          cx={0} cy={0} r={31}
+          clipPath="url(#rightCircleClip)"
+          fill={colors.red}
+          opacity={secondHalfCircleOpacity} />
+        <AnimatedG
+          style={{
+            transform: [
+              { translateX: -offsetAndroid },
+              {
+                rotate: angleTransform,
+              },
+              { translateX: offsetAndroid },
+            ],
+          }}>
+          <AnimatedCircle
+            cx={0} cy={0} r={32}
+            clipPath="url(#rightCircleClip)"
+            fill={colors.white} />
+          <Line
+            x1={0} y1={0}
+            x2={0} y2={-32.3}
+            stroke={colors.red}
+            strokeWidth={1.7}
+            strokeLinecap="round" />
+        </AnimatedG>
+        <AnimatedCircle
+          cx={0} cy={0} r={31}
+          clipPath="url(#rightCircleClip)"
+          fill={colors.red}
+          opacity={firstHalfCircleOpacity} />
         <Circle
-          cx={50} cy={50} r={31}
-          mask="url(#sliverMask)"
+          cx={0} cy={0} r={31}
+          clipPath="url(#sliverClip)"
           fill={colors.red} />
-        <AnimatedPath
-          d={this.state.circlePath}
-          fill={colors.red} />
-        <AnimatedLine
-          x1={50} y1={50}
-          x2={this.state.lineXCoordinate} y2={this.state.lineYCoordinate}
-          stroke={colors.red}
-          strokeWidth={1.7}
-          strokeLinecap="round" />
         <Circle
-          cx={50} cy={50} r={9}
+          cx={0} cy={0} r={9}
           fill={colors.gray} />
         <Text
-          x={50} y={53.2}
+          x={0} y={3.2}
           textAnchor="middle"
           fontFamily="BetecknaLowerCase"
           fontSize={10}
