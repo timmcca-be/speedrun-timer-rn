@@ -14,22 +14,19 @@ const loadSound: (name: string) => Promise<Sound> = async (name: string): Promis
   new Promise<Sound>((resolve: (sound: Sound) => void): void => {
     const sound: Sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => {
       // Silently playing the sound reduces delay on the first real play
-      sound.setVolume(0);
       sound.play();
       resolve(sound);
     });
   });
 
-const playSound: (soundPromise: Promise<Sound>) => Promise<void>
-  = async (soundPromise: Promise<Sound>): Promise<void> =>
+const playSound = (soundPromise: Promise<Sound>): void => {
   soundPromise.then((sound: Sound): void => {
     sound.stop();
-    sound.setVolume(1);
     sound.play();
   });
-
-const tick: Promise<Sound> = loadSound('tick');
-const ding: Promise<Sound> = loadSound('ding');
+};
+const tick = loadSound('tick');
+const ding = loadSound('ding');
 
 interface IState {
   /** Timer is currently counting down */
@@ -72,9 +69,10 @@ export class App extends Component<{}, IState> {
    * @param seconds Number of seconds to count down
    */
   private startTimer(seconds: number): void {
+    const endTime = Date.now() + seconds * MS_PER_SEC;
     this.setState({
       active: true,
-      endTime: Date.now() + seconds * MS_PER_SEC,
+      endTime,
       remainingSeconds: Math.ceil(seconds),
     }, this.updateTime.bind(this));
   }
@@ -83,30 +81,29 @@ export class App extends Component<{}, IState> {
    * Recursive function that updates the time until it reaches zero
    */
   private updateTime(): void {
-    if (!this.state.active) {
-      return;
-    }
-    const remainingTime = this.state.endTime - Date.now();
-    if (remainingTime <= 0) {
-      this.setState({
-        active: false,
-        remainingSeconds: 0,
-      });
-      // No need to track the sound playing here
-      // tslint:disable-next-line:no-floating-promises
-      playSound(ding);
-
-      return;
-    }
-    const remainingSeconds = Math.ceil(remainingTime / MS_PER_SEC);
-    if (remainingSeconds < this.state.remainingSeconds) {
-      if (remainingSeconds <= NUM_TICKS) {
-        // tslint:disable-next-line:no-floating-promises
-        playSound(tick);
+    setTimeout(() => {
+      if (!this.state.active) {
+        return;
       }
-      this.setState({ remainingSeconds }, this.updateTime.bind(this));
-    } else {
-      setTimeout(this.updateTime.bind(this));
-    }
+      const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
+      if (remainingSeconds === 0) {
+        playSound(ding);
+        this.setState({
+          active: false,
+          remainingSeconds: 0,
+        });
+      } else if (remainingSeconds < this.state.remainingSeconds) {
+        if (remainingSeconds <= NUM_TICKS) {
+          playSound(tick);
+        }
+        this.setState({ remainingSeconds }, this.updateTime.bind(this));
+      } else {
+        this.updateTime();
+      }
+    });
+    // No delay before the next call - I have tried many ways to make it wait until the right time to call itself again.
+    // Every way I tried, at least sometimes, would add 10-20ms extra delay.
+    // With constant recursion, there's 0-5ms delay between endTime and when the timer actually ends.
+    // Times were measured on my Moto G5 Plus.
   }
 }

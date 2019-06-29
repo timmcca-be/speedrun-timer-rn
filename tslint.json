@@ -12,6 +12,7 @@
         ],
         "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}],
         "no-use-before-declare": false,
-        "align": false
+        "align": false,
+        "no-floating-promises": false
     }
 }
