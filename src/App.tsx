@@ -5,18 +5,12 @@ import Sound from 'react-native-sound';
 import { TimeForm } from './components/TimeForm';
 import { TimerImage } from './components/TimerImage';
 
-Sound.setCategory('Playback', false);
-
 const NUM_TICKS = 3;
 const MS_PER_SEC = 1000;
 
 const loadSound: (name: string) => Promise<Sound> = async (name: string): Promise<Sound> =>
   new Promise<Sound>((resolve: (sound: Sound) => void): void => {
-    const sound: Sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => {
-      // Silently playing the sound reduces delay on the first real play
-      sound.play();
-      resolve(sound);
-    });
+    const sound: Sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => { resolve(sound); });
   });
 
 const playSound = (soundPromise: Promise<Sound>): void => {
@@ -25,6 +19,7 @@ const playSound = (soundPromise: Promise<Sound>): void => {
     sound.play();
   });
 };
+
 const tick = loadSound('tick');
 const ding = loadSound('ding');
 
