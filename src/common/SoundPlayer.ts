@@ -15,7 +15,7 @@ if (Platform.OS === 'android') {
   SoundPlayer = NativeModules.SoundPlayer;
 } else {
   SoundPlayer = {
-    play(sound: number, numTicks: number): void {
+    play(_1: number, _2: number): void {
       // TODO
     },
   };

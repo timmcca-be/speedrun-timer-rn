@@ -98,7 +98,7 @@ export class TimerAnimation extends PureComponent<IProps> {
   }
 
   /** Create and return the animated part of the timer SVG */
-  public render = (): ReactElement => {
+  public render(): ReactElement {
     const offsetAndroid = Platform.OS === 'android' ? this.props.size / 2 : 0;
 
     return (

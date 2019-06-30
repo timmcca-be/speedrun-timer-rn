@@ -30,13 +30,22 @@ export class App extends PureComponent<{}, IState> {
     };
   }
 
+  /** If the timer is running, start waiting for the next update after the time is updated */
+  public componentDidUpdate(_: {}, prevState: IState): void {
+    if (this.state.active) {
+      this.waitBeforeUpdate();
+    }
+  }
+
   /** Create and return app view */
-  public readonly render = (): ReactElement => (
-    <View>
-      <TimerImage {...this.state} />
-      <TimeForm active={this.state.active} start={this.startTimer} end={this.endTimer} />
-    </View>
-  )
+  public render(): ReactElement {
+    return (
+      <View>
+        <TimerImage {...this.state} />
+        <TimeForm active={this.state.active} start={this.startTimer} end={this.endTimer} />
+      </View>
+    );
+  }
 
   /** Stop timer */
   private readonly endTimer = (): void => {
@@ -55,7 +64,7 @@ export class App extends PureComponent<{}, IState> {
       active: true,
       endTime,
       remainingSeconds: Math.ceil(seconds),
-    }, this.updateTime);
+    });
     SoundPlayer.play(endTime, NUM_TICKS);
   }
 
@@ -63,28 +72,27 @@ export class App extends PureComponent<{}, IState> {
    * Recursive function that updates the time until it reaches zero
    */
   private readonly updateTime = (): void => {
-    setTimeout(() => {
-      if (!this.state.active) {
-        return;
-      }
-      const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
-      if (remainingSeconds === 0) {
-        this.setState({
-          active: false,
-          remainingSeconds: 0,
-        });
-      } else if (remainingSeconds < this.state.remainingSeconds) {
-        this.setState({ remainingSeconds }, this.waitBeforeUpdate);
-      } else {
-        this.updateTime();
-      }
-    });
+    if (!this.state.active) {
+      return;
+    }
+    const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
+    if (remainingSeconds === 0) {
+      this.setState({
+        active: false,
+        remainingSeconds: 0,
+      });
+    } else if (remainingSeconds < this.state.remainingSeconds) {
+      this.setState({ remainingSeconds });
+    } else {
+      // Calling this directly stalls the entire JS thread, but setInterval has startup lag
+      setTimeout(this.updateTime);
+    }
   }
 
   /**
    * Wait until 100 ms before the next update, then start running updateTime.
    */
-  private readonly waitBeforeUpdate = (): void => {
+  private waitBeforeUpdate(): void {
     setTimeout(this.updateTime, (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
   }
 }
