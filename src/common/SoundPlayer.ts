@@ -1,23 +1,10 @@
 import { NativeModules, Platform } from 'react-native';
-/* import Sound from 'react-native-sound';
-
-const loadSound: (name: string) => Promise<Sound> = async (name: string): Promise<Sound> =>
-  new Promise<Sound>((resolve: (sound: Sound) => void): void => {
-    const sound: Sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => { resolve(sound); });
-  });
-
-const playSound = (soundPromise: Promise<Sound>): void => {
-  soundPromise.then((sound: Sound): void => {
-    sound.stop();
-    sound.play();
-  });
-};
-
-const tick = loadSound('tick');
-const ding = loadSound('ding');*/
 
 interface ISoundPlayer {
-  /** Play the sound */
+  /**
+   * Play numTicks ticks, one every second ending a second before the timer ends,
+   * then play a ding when the timer ends.
+   */
   // tslint:disable-next-line:member-ordering
   play(endTime: number, numTicks: number): void;
 }

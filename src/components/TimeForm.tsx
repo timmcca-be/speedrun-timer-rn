@@ -32,7 +32,7 @@ export class TimeForm extends Component<IProps, IState> {
         <TextInput keyboardType="numeric" onChangeText={(value: string): void => { this.changeTime(value); }} />
         <Button
           title={this.props.active ? 'Stop' : 'Start'}
-          onPress={this.props.active ? this.props.end : this.startTimer.bind(this)} />
+          onPress={this.props.active ? this.props.end : this.startTimer} />
       </View>
     );
   }
@@ -48,7 +48,7 @@ export class TimeForm extends Component<IProps, IState> {
   }
 
   /** Start the timer */
-  private startTimer(): void {
+  private readonly startTimer = (): void => {
     this.props.start(this.state.time);
   }
 }

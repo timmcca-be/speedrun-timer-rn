@@ -31,17 +31,15 @@ export class App extends Component<{}, IState> {
   }
 
   /** Create and return app view */
-  public render(): ReactElement {
-    return (
-      <View>
-        <TimerImage {...this.state} />
-        <TimeForm active={this.state.active} start={this.startTimer.bind(this)} end={this.endTimer.bind(this)} />
-      </View>
-    );
-  }
+  public readonly render = (): ReactElement => (
+    <View>
+      <TimerImage {...this.state} />
+      <TimeForm active={this.state.active} start={this.startTimer} end={this.endTimer} />
+    </View>
+  )
 
   /** Stop timer */
-  private endTimer(): void {
+  private readonly endTimer = (): void => {
     this.setState({
       active: false,
     });
@@ -51,20 +49,20 @@ export class App extends Component<{}, IState> {
    * Start the timer
    * @param seconds Number of seconds to count down
    */
-  private startTimer(seconds: number): void {
+  private readonly startTimer = (seconds: number): void => {
     const endTime = Date.now() + seconds * MS_PER_SEC;
     this.setState({
       active: true,
       endTime,
       remainingSeconds: Math.ceil(seconds),
-    }, this.updateTime.bind(this));
+    }, this.updateTime);
     SoundPlayer.play(endTime, NUM_TICKS);
   }
 
   /**
    * Recursive function that updates the time until it reaches zero
    */
-  private updateTime(): void {
+  private readonly updateTime = (): void => {
     setTimeout(() => {
       if (!this.state.active) {
         return;
@@ -76,7 +74,7 @@ export class App extends Component<{}, IState> {
           remainingSeconds: 0,
         });
       } else if (remainingSeconds < this.state.remainingSeconds) {
-        this.setState({ remainingSeconds }, this.waitBeforeUpdate.bind(this));
+        this.setState({ remainingSeconds }, this.waitBeforeUpdate);
       } else {
         this.updateTime();
       }
@@ -86,7 +84,7 @@ export class App extends Component<{}, IState> {
   /**
    * Wait until 100 ms before the next update, then start running updateTime.
    */
-  private waitBeforeUpdate(): void {
-    setTimeout(this.updateTime.bind(this), (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
+  private readonly waitBeforeUpdate = (): void => {
+    setTimeout(this.updateTime, (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
   }
 }

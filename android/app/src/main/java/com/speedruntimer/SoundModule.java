@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
+// TODO: implement cancelling sound
 public class SoundModule extends ReactContextBaseJavaModule {
 
     private class SoundRunnable implements Runnable {
@@ -39,6 +40,7 @@ public class SoundModule extends ReactContextBaseJavaModule {
     public SoundModule(final ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
+        // TODO: use builder
         final SoundPool sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
         tickRunnable = new SoundRunnable(sp, sp.load(reactContext, R.raw.tick, 1));
         dingRunnable = new SoundRunnable(sp, sp.load(reactContext, R.raw.ding, 1));
