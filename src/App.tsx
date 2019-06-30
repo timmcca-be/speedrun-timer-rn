@@ -1,27 +1,15 @@
 import React, { Component, ReactElement } from 'react';
 import { View } from 'react-native';
-import Sound from 'react-native-sound';
 
+import { SoundPlayer } from './common/SoundPlayer';
 import { TimeForm } from './components/TimeForm';
 import { TimerImage } from './components/TimerImage';
 
-const NUM_TICKS = 3;
 const MS_PER_SEC = 1000;
+const UPDATE_BUFFER = 100;
 
-const loadSound: (name: string) => Promise<Sound> = async (name: string): Promise<Sound> =>
-  new Promise<Sound>((resolve: (sound: Sound) => void): void => {
-    const sound: Sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => { resolve(sound); });
-  });
-
-const playSound = (soundPromise: Promise<Sound>): void => {
-  soundPromise.then((sound: Sound): void => {
-    sound.stop();
-    sound.play();
-  });
-};
-
-const tick = loadSound('tick');
-const ding = loadSound('ding');
+// TODO: make this configurable
+const NUM_TICKS = 3;
 
 interface IState {
   /** Timer is currently counting down */
@@ -70,6 +58,7 @@ export class App extends Component<{}, IState> {
       endTime,
       remainingSeconds: Math.ceil(seconds),
     }, this.updateTime.bind(this));
+    SoundPlayer.play(endTime, NUM_TICKS);
   }
 
   /**
@@ -82,23 +71,22 @@ export class App extends Component<{}, IState> {
       }
       const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
       if (remainingSeconds === 0) {
-        playSound(ding);
         this.setState({
           active: false,
           remainingSeconds: 0,
         });
       } else if (remainingSeconds < this.state.remainingSeconds) {
-        if (remainingSeconds <= NUM_TICKS) {
-          playSound(tick);
-        }
-        this.setState({ remainingSeconds }, this.updateTime.bind(this));
+        this.setState({ remainingSeconds }, this.waitBeforeUpdate.bind(this));
       } else {
         this.updateTime();
       }
     });
-    // No delay before the next call - I have tried many ways to make it wait until the right time to call itself again.
-    // Every way I tried, at least sometimes, would add 10-20ms extra delay.
-    // With constant recursion, there's 0-5ms delay between endTime and when the timer actually ends.
-    // Times were measured on my Moto G5 Plus.
+  }
+
+  /**
+   * Wait until 100 ms before the next update, then start running updateTime.
+   */
+  private waitBeforeUpdate(): void {
+    setTimeout(this.updateTime.bind(this), (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
   }
 }
