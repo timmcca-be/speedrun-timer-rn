@@ -10,9 +10,17 @@
             "arrow-parameter",
             "property-declaration"
         ],
-        "file-name-casing": false,
+        "file-name-casing": [true, "pascal-case"],
         "no-use-before-declare": false,
         "align": false,
-        "no-floating-promises": false
+        "strict-comparisons": [true, {  "allow-object-equal-comparison": true }],
+        "variable-name": {
+            "options": [
+                "check-format",
+                "allow-pascal-case",
+                "allow-trailing-underscore",
+                "ban-keywords"
+            ]
+        }
     }
 }

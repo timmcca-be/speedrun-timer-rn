@@ -1,4 +1,4 @@
-import React, { Component, ReactElement } from 'react';
+import React, { PureComponent, ReactElement } from 'react';
 import { View } from 'react-native';
 
 import { SoundPlayer } from './common/SoundPlayer';
@@ -20,7 +20,7 @@ interface IState {
   remainingSeconds: number;
 }
 /** Container class with timer logic */
-export class App extends Component<{}, IState> {
+export class App extends PureComponent<{}, IState> {
   public constructor(props: {}) {
     super(props);
     this.state = {

@@ -29,7 +29,7 @@ export class TimeForm extends Component<IProps, IState> {
   public render(): ReactElement {
     return (
       <View>
-        <TextInput keyboardType="numeric" onChangeText={(value: string): void => { this.changeTime(value); }} />
+        <TextInput keyboardType="numeric" onChangeText={this.changeTime} />
         <Button
           title={this.props.active ? 'Stop' : 'Start'}
           onPress={this.props.active ? this.props.end : this.startTimer} />
@@ -37,11 +37,18 @@ export class TimeForm extends Component<IProps, IState> {
     );
   }
 
+  /** Component does not need to update if only the state has changed */
+  public shouldComponentUpdate(nextProps: IProps): boolean {
+    return nextProps.active !== this.props.active
+      || nextProps.end !== this.props.end
+      || nextProps.start !== this.props.start;
+  }
+
   /**
    * Update the time in state
    * @param value New time
    */
-  private changeTime(value: string): void {
+  private readonly changeTime = (value: string): void => {
     this.setState({
       time: parseFloat(value),
     });

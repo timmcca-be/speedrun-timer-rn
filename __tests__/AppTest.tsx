@@ -1,5 +1,3 @@
-// Mocked functions may have empty bodies
-/* tslint:disable:no-empty */
 import React from 'react';
 // Not my library, not my monkeys
 // tslint:disable-next-line:no-import-side-effect

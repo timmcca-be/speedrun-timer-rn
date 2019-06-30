@@ -9,7 +9,6 @@ interface ISoundPlayer {
   play(endTime: number, numTicks: number): void;
 }
 
-// tslint:disable-next-line:variable-name
 let SoundPlayer: ISoundPlayer;
 if (Platform.OS === 'android') {
   // tslint:disable-next-line:no-unsafe-any

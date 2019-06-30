@@ -1,11 +1,11 @@
 // It's an SVG. How can it not have "magic numbers"?
 /* tslint:disable:no-magic-numbers */
 
-import React, { Component, ReactElement } from 'react';
+import React, { PureComponent, ReactElement } from 'react';
 import { Dimensions } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Line, Rect, Text } from 'react-native-svg';
 
-import { colors } from '../common/colors';
+import * as Colors from '../common/Colors';
 
 import { TimerAnimation } from './TimerAnimation';
 
@@ -73,7 +73,7 @@ interface IProps {
   remainingSeconds: number;
 }
 /** SVG image representation of timer with a live display */
-export class TimerImage extends Component<IProps> {
+export class TimerImage extends PureComponent<IProps> {
   /** Create and return the timer SVG */
   public render(): ReactElement {
     const size: number = Dimensions.get('window').width * 0.9;
@@ -89,27 +89,27 @@ export class TimerImage extends Component<IProps> {
         </Defs>
         <Circle
           cx={0} cy={0} r={50}
-          fill={colors.gray} />
+          fill={Colors.GRAY} />
         <Circle
           cx={0} cy={0} r={46}
-          fill={colors.black} />
+          fill={Colors.BLACK} />
         <Circle
           cx={0} cy={0} r={43}
-          fill={colors.white} />
+          fill={Colors.WHITE} />
         <TimerAnimation {...this.props} size={size} />
         <Circle
           cx={0} cy={0} r={31}
           clipPath="url(#sliverClip)"
-          fill={colors.red} />
+          fill={Colors.RED} />
         <Circle
           cx={0} cy={0} r={9}
-          fill={colors.gray} />
+          fill={Colors.GRAY} />
         <Text
           x={0} y={3.2}
           textAnchor="middle"
           fontFamily="BetecknaLowerCase"
           fontSize={10}
-          fill={colors.black}>
+          fill={Colors.BLACK}>
           {this.props.remainingSeconds === 0 ? '' : this.props.remainingSeconds}
         </Text>
         {
@@ -117,7 +117,7 @@ export class TimerImage extends Component<IProps> {
             <Line key={i}
               x1={tick.x1} y1={tick.y1}
               x2={tick.x2} y2={tick.y2}
-              stroke={colors.black}
+              stroke={Colors.BLACK}
               strokeWidth={0.6}
               strokeLinecap="round" />
           ))
@@ -127,7 +127,7 @@ export class TimerImage extends Component<IProps> {
             <Line key={i}
               x1={tick.x1} y1={tick.y1}
               x2={tick.x2} y2={tick.y2}
-              stroke={colors.black}
+              stroke={Colors.BLACK}
               strokeWidth={0.25}
               strokeLinecap="round" />
           ))
@@ -140,7 +140,7 @@ export class TimerImage extends Component<IProps> {
               textAnchor="middle"
               fontFamily="BetecknaLowerCase"
               fontSize={8}
-              fill={colors.black}>
+              fill={Colors.BLACK}>
               {i * 5}
             </Text>
           ))

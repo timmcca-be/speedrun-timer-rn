@@ -1,11 +1,11 @@
 // It's an SVG. How can it not have "magic numbers"?
 /* tslint:disable:no-magic-numbers */
 
-import React, { Component, ReactElement } from 'react';
+import React, { PureComponent, ReactElement } from 'react';
 import { Animated, Easing, Platform } from 'react-native';
 import { Circle, ClipPath, Defs, G, Line, Rect } from 'react-native-svg';
 
-import { colors } from '../common/colors';
+import * as Colors from '../common/Colors';
 
 // Not my library, not my monkeys
 /* tslint:disable:variable-name no-any no-unsafe-any */
@@ -44,7 +44,7 @@ interface IProps {
   size: number;
 }
 /** The animated components of the timer SVG */
-export class TimerAnimation extends Component<IProps> {
+export class TimerAnimation extends PureComponent<IProps> {
   /**
    * If the timer was just activated, start the animation. If it was just deactivated, stop the animation.
    * @param prevProps previous props
@@ -123,13 +123,13 @@ export class TimerAnimation extends Component<IProps> {
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#leftCircleClip)"
-          fill={colors.red}
+          fill={Colors.RED}
           opacity={firstHalfCircleOpacity} />
         {/* During the second half, this semicircle turns on and starts to get covered. */}
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"
-          fill={colors.red}
+          fill={Colors.RED}
           opacity={secondHalfCircleOpacity} />
         {/* This group is the line and white semicircle */}
         <AnimatedG
@@ -145,11 +145,11 @@ export class TimerAnimation extends Component<IProps> {
           <Circle
             cx={0} cy={0} r={32}
             clipPath="url(#rightCircleClip)"
-            fill={colors.white} />
+            fill={Colors.WHITE} />
           <Line
             x1={0} y1={0}
             x2={0} y2={-32.3}
-            stroke={colors.red}
+            stroke={Colors.RED}
             strokeWidth={1.7}
             strokeLinecap="round" />
         </AnimatedG>
@@ -159,7 +159,7 @@ export class TimerAnimation extends Component<IProps> {
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"
-          fill={colors.red}
+          fill={Colors.RED}
           opacity={firstHalfCircleOpacity} />
       </>
     );
