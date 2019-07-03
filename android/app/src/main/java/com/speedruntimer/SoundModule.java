@@ -21,10 +21,10 @@ public class SoundModule extends ReactContextBaseJavaModule {
         this.reactContext = reactContext;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             sp = new SoundPool.Builder()
-                    .setMaxStreams(2)
+                    .setMaxStreams(1)
                     .build();
         } else {
-            sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+            sp = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
         }
 
         tickId = sp.load(reactContext, R.raw.tick, 1);
@@ -37,13 +37,18 @@ public class SoundModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void playTicks(final Integer numTicks) {
-        sp.play(tickId, 1, 1, 1, numTicks - 1, 1);
+    public void playTick() {
+        sp.play(tickId, 1, 1, 1, 0, 1);
     }
 
     @ReactMethod
     public void playDing() {
         sp.play(dingId, 1, 1, 1, 0, 1);
+    }
+
+    @ReactMethod
+    public void prepare() {
+        sp.play(dingId, 0, 0, 1, 0, 1);
     }
 
 }

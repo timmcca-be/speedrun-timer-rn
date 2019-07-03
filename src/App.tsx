@@ -18,17 +18,17 @@ interface IState {
   endTime?: number;
   /** Number of remaining seconds on timer, rounded up */
   remainingSeconds: number;
-  /** Has the tick sound been started yet? */
-  soundStarted: boolean;
 }
 /** Container class with timer logic */
 export class App extends PureComponent<{}, IState> {
+  /** Has SoundPlayer.prepare been called yet? */
+  private prepared = false;
+
   public constructor(props: {}) {
     super(props);
     this.state = {
       active: false,
       remainingSeconds: 0,
-      soundStarted: false,
     };
   }
 
@@ -54,6 +54,7 @@ export class App extends PureComponent<{}, IState> {
     this.setState({
       active: false,
     });
+    this.prepared = false;
   }
 
   /**
@@ -66,7 +67,6 @@ export class App extends PureComponent<{}, IState> {
       active: true,
       endTime,
       remainingSeconds: Math.ceil(seconds),
-      soundStarted: false,
     });
   }
 
@@ -81,6 +81,10 @@ export class App extends PureComponent<{}, IState> {
       throw new Error('Timer was started without time');
     }
     const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
+    if (remainingSeconds <= NUM_TICKS + 1 && !this.prepared) {
+      SoundPlayer.prepare();
+      this.prepared = true;
+    }
     if (remainingSeconds === 0) {
       SoundPlayer.playDing();
       this.setState({
@@ -88,15 +92,10 @@ export class App extends PureComponent<{}, IState> {
         remainingSeconds: 0,
       });
     } else if (remainingSeconds < this.state.remainingSeconds) {
-      if (remainingSeconds <= NUM_TICKS && !this.state.soundStarted) {
-        SoundPlayer.playTicks(remainingSeconds);
-        this.setState({
-          remainingSeconds,
-          soundStarted: true,
-        });
-      } else {
-        this.setState({ remainingSeconds });
+      if (remainingSeconds <= NUM_TICKS) {
+        SoundPlayer.playTick();
       }
+      this.setState({ remainingSeconds });
     } else {
       // Calling this directly stalls the entire JS thread, but setInterval has startup lag
       setTimeout(this.updateTime);

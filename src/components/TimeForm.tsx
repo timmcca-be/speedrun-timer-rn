@@ -1,4 +1,4 @@
-import React, { Component, ReactElement } from 'react';
+import React, { PureComponent, ReactElement } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
 interface IProps {
@@ -12,17 +12,13 @@ interface IProps {
    */
   start(seconds: number): void;
 }
-interface IState {
-  /** Current number of seconds as read from the input */
-  time: number;
-}
 /** Form used to input time and start/stop timer */
-export class TimeForm extends Component<IProps, IState> {
+export class TimeForm extends PureComponent<IProps> {
+  /** Current time in text box */
+  private time = 0;
+
   public constructor(props: IProps) {
     super(props);
-    this.state = {
-      time: 0,
-    };
   }
 
   /** Create and return time entry form */
@@ -37,25 +33,16 @@ export class TimeForm extends Component<IProps, IState> {
     );
   }
 
-  /** Component does not need to update if only the state has changed */
-  public shouldComponentUpdate(nextProps: IProps): boolean {
-    return nextProps.active !== this.props.active
-      || nextProps.end !== this.props.end
-      || nextProps.start !== this.props.start;
-  }
-
   /**
-   * Update the time in state
+   * Update the stored time
    * @param value New time
    */
   private readonly changeTime = (value: string): void => {
-    this.setState({
-      time: parseFloat(value),
-    });
+    this.time = parseFloat(value);
   }
 
   /** Start the timer */
   private readonly startTimer = (): void => {
-    this.props.start(this.state.time);
+    this.props.start(this.time);
   }
 }

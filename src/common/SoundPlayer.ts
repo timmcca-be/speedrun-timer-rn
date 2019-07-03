@@ -4,7 +4,9 @@ interface ISoundPlayer {
   /** Play ding */
   playDing(): void;
   /** Play numTicks ticks, one every second */
-  playTicks(numTicks: number): void;
+  playTick(): void;
+  /** Play a sound silently to reduce lag on first play */
+  prepare(): void;
 }
 
 let SoundPlayer: ISoundPlayer;
@@ -15,7 +17,9 @@ if (Platform.OS === 'android') {
   SoundPlayer = {
     playDing(): void {
       // TODO
-    }, playTicks(_2: number): void {
+    }, playTick(): void {
+      // TODO
+    }, prepare(): void {
       // TODO
     },
   };
