@@ -13,7 +13,7 @@ const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedCompone
 const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
 /* tslint:enable:variable-name no-any no-unsafe-any */
 
-const MS_PER_MINUTE = 60000;
+const MS_PER_SECOND = 1000;
 
 // Determines angle of timer line
 const angleAnim = new Animated.Value(1);
@@ -37,7 +37,9 @@ interface IProps {
   /** Timer is currently counting down */
   active: boolean;
   /** Time that timer should finish at */
-  endTime: number;
+  endTime?: number;
+  /** Maximum time on the timer in seconds */
+  maxTime: number;
   /** Number of remaining seconds on timer, rounded up */
   remainingSeconds: number;
   /** Parent SVG width/height in pixels */
@@ -45,6 +47,12 @@ interface IProps {
 }
 /** The animated components of the timer SVG */
 export class TimerAnimation extends PureComponent<IProps> {
+  public constructor(props: IProps) {
+    super(props);
+    if (props.active) {
+      this.startAnimation();
+    }
+  }
   /**
    * If the timer was just activated, start the animation. If it was just deactivated, stop the animation.
    * @param prevProps previous props
@@ -54,47 +62,10 @@ export class TimerAnimation extends PureComponent<IProps> {
       // If remainingTime is zero, we let the animation naturally end in case it is behind the timer.
       angleAnim.stopAnimation();
       secondHalfCircleOpacity.stopAnimation();
-
-      return;
+    } else if (!prevProps.active && this.props.active) {
+      // If the timer was just started, start the animation
+      this.startAnimation();
     }
-
-    if (prevProps.active || !this.props.active) {
-      // If the animation was started before or if it is not supposed to be running, don't start it
-      return;
-    }
-
-    const remainingTime = this.props.endTime - Date.now();
-    const start = 1 - remainingTime / MS_PER_MINUTE;
-    angleAnim.setValue(start);
-    const angleAnimation = Animated.timing(angleAnim, {
-      duration: remainingTime,
-      easing: Easing.linear,
-      toValue: 1,
-      useNativeDriver: true,
-    });
-
-    if (remainingTime <= MS_PER_MINUTE / 2) {
-      // If we're already in the second half, we only need to do the angle animation
-      secondHalfCircleOpacity.setValue(1);
-      angleAnimation.start();
-
-      return;
-    }
-
-    secondHalfCircleOpacity.setValue(0);
-    const circleAnimation = Animated.sequence([
-      // Wait until the timer is at the halfway point
-      Animated.delay(remainingTime - MS_PER_MINUTE / 2),
-      // Flip the opacity of the semicircles
-      Animated.timing(secondHalfCircleOpacity, {
-        duration: 0,
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]);
-
-    Animated.parallel([angleAnimation, circleAnimation])
-      .start();
   }
 
   /** Create and return the animated part of the timer SVG */
@@ -163,5 +134,45 @@ export class TimerAnimation extends PureComponent<IProps> {
           opacity={firstHalfCircleOpacity} />
       </>
     );
+  }
+
+  /** Start the animation */
+  private startAnimation(): void {
+    if (this.props.endTime === undefined) {
+      throw new Error('Timer was started without time');
+    }
+
+    const remainingTime = this.props.endTime - Date.now();
+    const start = 1 - remainingTime / (MS_PER_SECOND * this.props.maxTime);
+    angleAnim.setValue(start);
+    const angleAnimation = Animated.timing(angleAnim, {
+      duration: remainingTime,
+      easing: Easing.linear,
+      toValue: 1,
+      useNativeDriver: true,
+    });
+
+    if (remainingTime <= MS_PER_SECOND * this.props.maxTime / 2) {
+      // If we're already in the second half, we only need to do the angle animation
+      secondHalfCircleOpacity.setValue(1);
+      angleAnimation.start();
+
+      return;
+    }
+
+    secondHalfCircleOpacity.setValue(0);
+    const circleAnimation = Animated.sequence([
+      // Wait until the timer is at the halfway point
+      Animated.delay(remainingTime - MS_PER_SECOND * this.props.maxTime / 2),
+      // Flip the opacity of the semicircles
+      Animated.timing(secondHalfCircleOpacity, {
+        duration: 0,
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    Animated.parallel([angleAnimation, circleAnimation])
+      .start();
   }
 }

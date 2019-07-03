@@ -1,12 +1,14 @@
 // It's an SVG. How can it not have "magic numbers"?
 /* tslint:disable:no-magic-numbers */
 
+import memoizeOne from 'memoize-one';
 import React, { PureComponent, ReactElement } from 'react';
 import { Dimensions } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Line, Rect, Text } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
 
+import { StaticTimerCenter } from './StaticTimerCenter';
 import { TimerAnimation } from './TimerAnimation';
 
 /** Tick on timer */
@@ -64,19 +66,99 @@ for (let i = 0; i < 60; i += 1) {
   }
 }
 
+const SECS_PER_MIN = 60;
+const SECS_PER_HOUR = SECS_PER_MIN * 60;
+const SECS_PER_DAY = SECS_PER_HOUR * 24;
+const SECS_PER_WEEK = SECS_PER_DAY * 7;
+
+const MAX_TIMES = [
+  // 60 seconds
+  SECS_PER_MIN,
+  // 12 minutes
+  SECS_PER_MIN * 12,
+  // 60 minutes
+  SECS_PER_HOUR,
+  // 12 hours
+  SECS_PER_HOUR * 12,
+  // 24 hours
+  SECS_PER_DAY,
+  // 12 days
+  SECS_PER_DAY * 12,
+  // 12 weeks
+  SECS_PER_WEEK * 12,
+  // 60 weeks
+  SECS_PER_WEEK * 60,
+  // 720 weeks
+  SECS_PER_WEEK * 720,
+];
+
+const defaultTimeLabels: string[] = new Array(12);
+for (let i = 0; i < 12; i += 1) {
+  defaultTimeLabels[i] = (i * 5).toString();
+}
+
 interface IProps {
   /** Timer is currently counting down */
   active: boolean;
   /** Time that timer should finish at */
-  endTime: number;
+  endTime?: number;
   /** Number of remaining seconds on timer, rounded up */
   remainingSeconds: number;
 }
+interface IMaxTimeData {
+  /** Amount of time associated with full timer in seconds */
+  maxTime: number;
+  /** List of labels associated with each bigTick */
+  timeLabels: string[];
+}
 /** SVG image representation of timer with a live display */
 export class TimerImage extends PureComponent<IProps> {
+  /**
+   * Get data for max time on timer
+   * @param endTime endTime from state
+   */
+  private readonly getTimeData = memoizeOne((endTime: number): IMaxTimeData => {
+    const duration = (endTime - Date.now()) / 1000;
+    let maxTime = MAX_TIMES.find((time: number): boolean => duration <= time);
+    maxTime = maxTime === undefined ? Infinity : maxTime;
+    let maxTimeInUnits: number;
+    let units: string;
+    if (maxTime <= SECS_PER_MIN) {
+      maxTimeInUnits = maxTime;
+      units = '';
+    } else if (maxTime <= SECS_PER_HOUR) {
+      maxTimeInUnits = maxTime / SECS_PER_MIN;
+      units = 'm';
+    } else if (maxTime <= SECS_PER_DAY) {
+      maxTimeInUnits = maxTime / SECS_PER_HOUR;
+      units = 'h';
+    } else if (maxTime <= SECS_PER_WEEK * 12) {
+      maxTimeInUnits = maxTime / SECS_PER_DAY;
+      units = 'd';
+    } else {
+      maxTimeInUnits = maxTime / SECS_PER_WEEK;
+      units = 'w';
+    }
+
+    const timeLabels: string[] = new Array(12);
+    const ratio = maxTimeInUnits / 12;
+    for (let i = 0; i < 12; i += 1) {
+      timeLabels[i] = maxTime === Infinity
+        ? (i === 0 ? '0' : '')
+        : `${i * ratio}${units}`;
+    }
+
+    return {
+      maxTime,
+      timeLabels,
+    };
+  });
+
   /** Create and return the timer SVG */
   public render(): ReactElement {
     const size: number = Dimensions.get('window').width * 0.9;
+
+    const { maxTime, timeLabels } = this.getTimeData(this.props.endTime === undefined ? 60 : this.props.endTime);
 
     return (
       <Svg width={size} height={size} viewBox="-50 -50 100 100" style={{ margin: '5%' }}>
@@ -96,7 +178,16 @@ export class TimerImage extends PureComponent<IProps> {
         <Circle
           cx={0} cy={0} r={43}
           fill={Colors.WHITE} />
-        <TimerAnimation {...this.props} size={size} />
+        {
+          // The Animated class loads the whole animation into memory at once.
+          // This runs out of memory for long animations.
+          // For long timers, switch to an image that is updated every second.
+          maxTime <= SECS_PER_MIN
+            ? <TimerAnimation {...this.props} maxTime={maxTime} size={size} />
+            : <StaticTimerCenter
+                angle={this.props.remainingSeconds / maxTime * 2 * Math.PI}
+                size={size} />
+        }
         <Circle
           cx={0} cy={0} r={31}
           clipPath="url(#sliverClip)"
@@ -141,7 +232,7 @@ export class TimerImage extends PureComponent<IProps> {
               fontFamily="BetecknaLowerCase"
               fontSize={8}
               fill={Colors.BLACK}>
-              {i * 5}
+              {timeLabels[i]}
             </Text>
           ))
         }

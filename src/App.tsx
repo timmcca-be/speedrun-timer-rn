@@ -15,9 +15,11 @@ interface IState {
   /** Timer is currently counting down */
   active: boolean;
   /** Time that timer should finish at */
-  endTime: number;
+  endTime?: number;
   /** Number of remaining seconds on timer, rounded up */
   remainingSeconds: number;
+  /** Has the tick sound been started yet? */
+  soundStarted: boolean;
 }
 /** Container class with timer logic */
 export class App extends PureComponent<{}, IState> {
@@ -25,13 +27,13 @@ export class App extends PureComponent<{}, IState> {
     super(props);
     this.state = {
       active: false,
-      endTime: 0,
       remainingSeconds: 0,
+      soundStarted: false,
     };
   }
 
   /** If the timer is running, start waiting for the next update after the time is updated */
-  public componentDidUpdate(_: {}, prevState: IState): void {
+  public componentDidUpdate(): void {
     if (this.state.active) {
       this.waitBeforeUpdate();
     }
@@ -64,8 +66,8 @@ export class App extends PureComponent<{}, IState> {
       active: true,
       endTime,
       remainingSeconds: Math.ceil(seconds),
+      soundStarted: false,
     });
-    SoundPlayer.play(endTime, NUM_TICKS);
   }
 
   /**
@@ -75,14 +77,26 @@ export class App extends PureComponent<{}, IState> {
     if (!this.state.active) {
       return;
     }
+    if (this.state.endTime === undefined) {
+      throw new Error('Timer was started without time');
+    }
     const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
     if (remainingSeconds === 0) {
+      SoundPlayer.playDing();
       this.setState({
         active: false,
         remainingSeconds: 0,
       });
     } else if (remainingSeconds < this.state.remainingSeconds) {
-      this.setState({ remainingSeconds });
+      if (remainingSeconds <= NUM_TICKS && !this.state.soundStarted) {
+        SoundPlayer.playTicks(remainingSeconds);
+        this.setState({
+          remainingSeconds,
+          soundStarted: true,
+        });
+      } else {
+        this.setState({ remainingSeconds });
+      }
     } else {
       // Calling this directly stalls the entire JS thread, but setInterval has startup lag
       setTimeout(this.updateTime);
@@ -93,6 +107,9 @@ export class App extends PureComponent<{}, IState> {
    * Wait until 100 ms before the next update, then start running updateTime.
    */
   private waitBeforeUpdate(): void {
+    if (this.state.endTime === undefined) {
+      throw new Error('Timer was started without time');
+    }
     setTimeout(this.updateTime, (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
   }
 }
