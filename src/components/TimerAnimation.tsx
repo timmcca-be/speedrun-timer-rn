@@ -14,6 +14,8 @@ const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G)
 /* tslint:enable:variable-name no-any no-unsafe-any */
 
 const MS_PER_SECOND = 1000;
+// Excessively long animations overwhelm the memory, so restrict individual size and daisy-chain them
+const MAX_DURATION = MS_PER_SECOND * 10;
 
 interface IProps {
   /** Timer is currently counting down */
@@ -53,9 +55,7 @@ export class TimerAnimation extends PureComponent<IProps> {
 
   public constructor(props: IProps) {
     super(props);
-    if (props.active) {
-      this.startAnimation();
-    }
+    this.startAnimation();
   }
   /**
    * If the timer was just activated, start the animation. If it was just deactivated, stop the animation.
@@ -66,7 +66,7 @@ export class TimerAnimation extends PureComponent<IProps> {
       // If remainingTime is zero, we let the animation naturally end in case it is behind the timer.
       this.angleAnim.stopAnimation();
       this.secondHalfCircleOpacity.stopAnimation();
-    } else if (!prevProps.active && this.props.active) {
+    } else if (!prevProps.active) {
       // If the timer was just started, start the animation
       this.startAnimation();
     }
@@ -141,25 +141,41 @@ export class TimerAnimation extends PureComponent<IProps> {
   }
 
   /** Start the animation */
-  private startAnimation(): void {
+  private readonly startAnimation = (): void => {
+    if (!this.props.active) {
+      return;
+    }
     if (this.props.endTime === undefined) {
       throw new Error('Timer was started without time');
     }
 
+    const maxMs = MS_PER_SECOND * this.props.maxTime;
+
     const remainingTime = this.props.endTime - Date.now();
-    const start = 1 - remainingTime / (MS_PER_SECOND * this.props.maxTime);
+    const start = 1 - remainingTime / maxMs;
     this.angleAnim.setValue(start);
+
+    const duration = remainingTime % MAX_DURATION;
+    let end = start + duration / maxMs;
+    let callback: (() => void) | undefined;
+    if (remainingTime <= MAX_DURATION) {
+      end = 1;
+    } else {
+      end = start + duration / maxMs;
+      callback = this.startAnimation;
+    }
     const angleAnimation = Animated.timing(this.angleAnim, {
-      duration: remainingTime,
+      duration,
       easing: Easing.linear,
-      toValue: 1,
+      toValue: end,
       useNativeDriver: true,
     });
 
-    if (remainingTime <= MS_PER_SECOND * this.props.maxTime / 2) {
-      // If we're already in the second half, we only need to do the angle animation
-      this.secondHalfCircleOpacity.setValue(1);
-      angleAnimation.start();
+    if (remainingTime <= maxMs / 2 || remainingTime + duration >= maxMs / 2) {
+      /* If we're already in the second half or we won't get into the second half,
+         we only need to do the angle animation */
+      this.secondHalfCircleOpacity.setValue(remainingTime <= maxMs / 2 ? 1 : 0);
+      angleAnimation.start(callback);
 
       return;
     }
@@ -177,6 +193,6 @@ export class TimerAnimation extends PureComponent<IProps> {
     ]);
 
     Animated.parallel([angleAnimation, circleAnimation])
-      .start();
+      .start(callback);
   }
 }

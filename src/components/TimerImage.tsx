@@ -8,7 +8,6 @@ import Svg, { Circle, ClipPath, Defs, Line, Rect, Text } from 'react-native-svg'
 
 import * as Colors from '../common/Colors';
 
-import { StaticTimerCenter } from './StaticTimerCenter';
 import { TimerAnimation } from './TimerAnimation';
 
 /** Tick on timer */
@@ -178,16 +177,7 @@ export class TimerImage extends PureComponent<IProps> {
         <Circle
           cx={0} cy={0} r={43}
           fill={Colors.WHITE} />
-        {
-          // The Animated class loads the whole animation into memory at once.
-          // This runs out of memory for long animations.
-          // For long timers, switch to an image that is updated every second.
-          maxTime <= SECS_PER_MIN
-            ? <TimerAnimation {...this.props} maxTime={maxTime} size={size} />
-            : <StaticTimerCenter
-                angle={this.props.remainingSeconds / maxTime * 2 * Math.PI}
-                size={size} />
-        }
+        <TimerAnimation {...this.props} maxTime={maxTime} size={size} />
         <Circle
           cx={0} cy={0} r={31}
           clipPath="url(#sliverClip)"
