@@ -2,12 +2,9 @@
 /* tslint:disable:no-magic-numbers */
 
 import React, { PureComponent, ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { G, Line, Path } from 'react-native-svg';
+import { Line, Path } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
-
-const e = React.createElement;
 
 interface IProps {
   /** Current angle, in degrees */
