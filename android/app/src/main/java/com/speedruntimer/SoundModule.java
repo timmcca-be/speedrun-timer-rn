@@ -8,7 +8,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
-// TODO: implement cancelling sound
 public class SoundModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext reactContext;
@@ -21,10 +20,10 @@ public class SoundModule extends ReactContextBaseJavaModule {
         this.reactContext = reactContext;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             sp = new SoundPool.Builder()
-                    .setMaxStreams(1)
+                    .setMaxStreams(2)
                     .build();
         } else {
-            sp = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+            sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
         }
 
         tickId = sp.load(reactContext, R.raw.tick, 1);

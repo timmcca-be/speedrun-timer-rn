@@ -2,7 +2,7 @@
 /* tslint:disable:no-magic-numbers */
 
 import memoizeOne from 'memoize-one';
-import React, { PureComponent, ReactElement } from 'react';
+import React, { Component, ReactElement } from 'react';
 import { Dimensions } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Line, Rect, Text } from 'react-native-svg';
 
@@ -68,7 +68,6 @@ for (let i = 0; i < 60; i += 1) {
 const SECS_PER_MIN = 60;
 const SECS_PER_HOUR = SECS_PER_MIN * 60;
 const SECS_PER_DAY = SECS_PER_HOUR * 24;
-const SECS_PER_WEEK = SECS_PER_DAY * 7;
 
 const MAX_TIMES = [
   // 60 seconds
@@ -83,13 +82,45 @@ const MAX_TIMES = [
   SECS_PER_DAY,
   // 12 days
   SECS_PER_DAY * 12,
-  // 12 weeks
-  SECS_PER_WEEK * 12,
-  // 60 weeks
-  SECS_PER_WEEK * 60,
-  // 720 weeks
-  SECS_PER_WEEK * 720,
+  // 60 days
+  SECS_PER_DAY * 60,
 ];
+
+/**
+ * Format time to go in timer
+ * @param seconds Number of seconds remaining
+ */
+const getFormattedTime = (seconds: number): string => {
+  if (seconds === 0) {
+    return '';
+  } if (seconds <= SECS_PER_MIN) {
+    return seconds.toString();
+  }
+
+  let smallUnit: number;
+  let bigUnit: number;
+  let bigUnitText: string;
+  if (seconds <= SECS_PER_HOUR) {
+    smallUnit = 1;
+    bigUnit = SECS_PER_MIN;
+    bigUnitText = 'm';
+  } else if (seconds <= SECS_PER_DAY) {
+    smallUnit = SECS_PER_MIN;
+    bigUnit = SECS_PER_HOUR;
+    bigUnitText = 'h';
+  } else {
+    smallUnit = SECS_PER_HOUR;
+    bigUnit = SECS_PER_DAY;
+    bigUnitText = 'd';
+  }
+
+  const bigUnitAmount = seconds / bigUnit;
+  if (bigUnitAmount >= 10) {
+    return `${Math.ceil(bigUnitAmount)}${bigUnitText}`;
+  }
+
+  return `${Math.floor(bigUnitAmount)}${bigUnitText}${Math.ceil((seconds % bigUnit) / smallUnit)}`;
+};
 
 const defaultTimeLabels: string[] = new Array(12);
 for (let i = 0; i < 12; i += 1) {
@@ -111,7 +142,12 @@ interface IMaxTimeData {
   timeLabels: string[];
 }
 /** SVG image representation of timer with a live display */
-export class TimerImage extends PureComponent<IProps> {
+export class TimerImage extends Component<IProps> {
+  /**
+   * Format time to go in timer, memoized to store the last output
+   * @param seconds Number of seconds remaining
+   */
+  private readonly getFormattedTime = memoizeOne(getFormattedTime);
   /**
    * Get data for max time on timer
    * @param endTime endTime from state
@@ -124,19 +160,16 @@ export class TimerImage extends PureComponent<IProps> {
     let units: string;
     if (maxTime <= SECS_PER_MIN) {
       maxTimeInUnits = maxTime;
-      units = '';
+      units = 'sec';
     } else if (maxTime <= SECS_PER_HOUR) {
       maxTimeInUnits = maxTime / SECS_PER_MIN;
-      units = 'm';
+      units = 'min';
     } else if (maxTime <= SECS_PER_DAY) {
       maxTimeInUnits = maxTime / SECS_PER_HOUR;
-      units = 'h';
-    } else if (maxTime <= SECS_PER_WEEK * 12) {
-      maxTimeInUnits = maxTime / SECS_PER_DAY;
-      units = 'd';
+      units = 'hr';
     } else {
-      maxTimeInUnits = maxTime / SECS_PER_WEEK;
-      units = 'w';
+      maxTimeInUnits = maxTime / SECS_PER_DAY;
+      units = 'day';
     }
 
     const timeLabels: string[] = new Array(12);
@@ -144,7 +177,7 @@ export class TimerImage extends PureComponent<IProps> {
     for (let i = 0; i < 12; i += 1) {
       timeLabels[i] = maxTime === Infinity
         ? (i === 0 ? '0' : '')
-        : `${i * ratio}${units}`;
+        : (i === 0 ? units : (i * ratio).toString());
     }
 
     return {
@@ -156,8 +189,8 @@ export class TimerImage extends PureComponent<IProps> {
   /** Create and return the timer SVG */
   public render(): ReactElement {
     const size: number = Dimensions.get('window').width * 0.9;
-
     const { maxTime, timeLabels } = this.getTimeData(this.props.endTime === undefined ? 60 : this.props.endTime);
+    const timeText = this.getFormattedTime(this.props.remainingSeconds);
 
     return (
       <Svg width={size} height={size} viewBox="-50 -50 100 100" style={{ margin: '5%' }}>
@@ -183,15 +216,15 @@ export class TimerImage extends PureComponent<IProps> {
           clipPath="url(#sliverClip)"
           fill={Colors.RED} />
         <Circle
-          cx={0} cy={0} r={9}
+          cx={0} cy={0} r={10}
           fill={Colors.GRAY} />
         <Text
-          x={0} y={3.2}
+          x={0} y={timeText.length > 2 ? 2.2 : 3.2}
           textAnchor="middle"
           fontFamily="BetecknaLowerCase"
-          fontSize={10}
+          fontSize={timeText.length > 2 ? 7 : 9}
           fill={Colors.BLACK}>
-          {this.props.remainingSeconds === 0 ? '' : this.props.remainingSeconds}
+          {timeText}
         </Text>
         {
           bigTicks.map((tick: ITick, i: number) => (
@@ -228,5 +261,14 @@ export class TimerImage extends PureComponent<IProps> {
         }
       </Svg>
     );
+  }
+
+  /** Only update if the time displayed should be different or if another prop has changed */
+  public shouldComponentUpdate(nextProps: IProps): boolean {
+    return this.props.active !== nextProps.active
+      || this.props.endTime !== nextProps.endTime
+      || (this.props.remainingSeconds !== nextProps.remainingSeconds
+        // Reminder that the order here is critical - flipping these will remove the memoization benefits
+        && this.getFormattedTime(this.props.remainingSeconds) !== this.getFormattedTime(nextProps.remainingSeconds));
   }
 }
