@@ -6,14 +6,14 @@ import React, { Component, ReactElement } from 'react';
 import { Text } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
-import * as SecondsPer from '../common/SecondsPer';
+import * as MillisPer from '../common/MillisPer';
 
 interface IProps {
   /** Number of seconds to display */
   seconds: number;
 }
 /** Form used to input time and start/stop timer */
-export class TimeDisplay extends Component<IProps> {
+export class SecondsDisplay extends Component<IProps> {
   /**
    * Format time to go in timer, memoized to store the last output
    * @param seconds Number of seconds remaining
@@ -21,35 +21,37 @@ export class TimeDisplay extends Component<IProps> {
   private readonly getFormattedTime = memoizeOne((seconds: number): string => {
     if (seconds === 0) {
       return '';
-    } if (seconds <= SecondsPer.MIN) {
+    }
+    const millis = seconds * MillisPer.SEC;
+    if (millis <= MillisPer.MIN) {
       return seconds.toString();
     }
 
     let smallUnit: number;
     let bigUnit: number;
     let bigUnitText: string;
-    if (seconds <= SecondsPer.HOUR) {
-      smallUnit = 1;
-      bigUnit = SecondsPer.MIN;
+    if (millis <= MillisPer.HOUR) {
+      smallUnit = MillisPer.SEC;
+      bigUnit = MillisPer.MIN;
       bigUnitText = 'm';
-    } else if (seconds <= SecondsPer.DAY) {
-      smallUnit = SecondsPer.MIN;
-      bigUnit = SecondsPer.HOUR;
+    } else if (millis <= MillisPer.DAY) {
+      smallUnit = MillisPer.MIN;
+      bigUnit = MillisPer.HOUR;
       bigUnitText = 'h';
     } else {
-      smallUnit = SecondsPer.HOUR;
-      bigUnit = SecondsPer.DAY;
+      smallUnit = MillisPer.HOUR;
+      bigUnit = MillisPer.DAY;
       bigUnitText = 'd';
     }
 
-    const bigUnitAmount = seconds / bigUnit;
+    const bigUnitAmount = millis / bigUnit;
     // 10 is used because it's the smallest two-digit number
     // tslint:disable-next-line:no-magic-numbers
     if (bigUnitAmount >= 10) {
       return `${Math.ceil(bigUnitAmount)}${bigUnitText}`;
     }
 
-    return `${Math.floor(bigUnitAmount)}${bigUnitText}${Math.ceil((seconds % bigUnit) / smallUnit)}`;
+    return `${Math.floor(bigUnitAmount)}${bigUnitText}${Math.ceil((millis % bigUnit) / smallUnit)}`;
   });
 
   public constructor(props: IProps) {

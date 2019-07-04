@@ -6,26 +6,26 @@ import { Animated, Easing, Platform } from 'react-native';
 import { Circle, ClipPath, Defs, G, Line, Rect } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
+import * as MillisPer from '../common/MillisPer';
 
-import { TimeDisplay } from './TimeDisplay';
+import { SecondsDisplay } from './SecondsDisplay';
 
 // Not my library, not my monkeys
 /* tslint:disable:variable-name no-any no-unsafe-any */
 const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedComponent(Circle);
 const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
-const AnimatedTimeDisplay: React.ComponentClass<any> = Animated.createAnimatedComponent(TimeDisplay);
+const AnimatedSecondsDisplay: React.ComponentClass<any> = Animated.createAnimatedComponent(SecondsDisplay);
 /* tslint:enable:variable-name no-any no-unsafe-any */
 
-const MS_PER_SECOND = 1000;
 // Excessively long animations overwhelm the memory, so restrict individual size and daisy-chain them
-const MAX_DURATION = MS_PER_SECOND * 10;
+const MAX_DURATION = MillisPer.SEC * 10;
 
 interface IProps {
   /** Timer is currently counting down */
   active: boolean;
   /** Time that timer should finish at */
   endTime?: number;
-  /** Maximum time on the timer in seconds */
+  /** Maximum time on the timer in milliseconds */
   maxTime: number;
   /** Parent SVG width/height in pixels */
   size: number;
@@ -154,7 +154,7 @@ export class TimerAnimation extends PureComponent<IProps> {
         <Circle
           cx={0} cy={0} r={10}
           fill={Colors.GRAY} />
-        <AnimatedTimeDisplay seconds={this.timerAnim} />
+        <AnimatedSecondsDisplay seconds={this.timerAnim} />
       </>
     );
   }
@@ -168,21 +168,19 @@ export class TimerAnimation extends PureComponent<IProps> {
       throw new Error('Timer was started without time');
     }
 
-    const maxMs = MS_PER_SECOND * this.props.maxTime;
-
     const remainingTime = this.props.endTime - Date.now();
-    this.timerAnim.setValue(remainingTime / MS_PER_SECOND);
-    const start = 1 - remainingTime / maxMs;
+    this.timerAnim.setValue(remainingTime / MillisPer.SEC);
+    const start = 1 - remainingTime / this.props.maxTime;
     this.angleAnim.setValue(start);
 
     const duration = remainingTime % MAX_DURATION;
-    let end = start + duration / maxMs;
+    let end = start + duration / this.props.maxTime;
     let callback: (() => void) | undefined;
     if (remainingTime <= MAX_DURATION) {
       end = 1;
       callback = this.props.end;
     } else {
-      end = start + duration / maxMs;
+      end = start + duration / this.props.maxTime;
       callback = this.startAnimation;
     }
     const angleAnimation = Animated.timing(this.angleAnim, {
@@ -194,14 +192,14 @@ export class TimerAnimation extends PureComponent<IProps> {
     const timerAnimation = Animated.timing(this.timerAnim, {
       duration,
       easing: Easing.linear,
-      toValue: (remainingTime - duration) / MS_PER_SECOND,
+      toValue: (remainingTime - duration) / MillisPer.SEC,
       // Can't use native driver because the time display isn't native
     });
 
-    if (remainingTime <= maxMs / 2 || remainingTime + duration >= maxMs / 2) {
+    if (remainingTime <= this.props.maxTime / 2 || remainingTime + duration >= this.props.maxTime / 2) {
       /* If we're already in the second half or we won't get into the second half,
          we only need to do the angle animation */
-      this.secondHalfCircleOpacity.setValue(remainingTime <= maxMs / 2 ? 1 : 0);
+      this.secondHalfCircleOpacity.setValue(remainingTime <= this.props.maxTime / 2 ? 1 : 0);
       Animated.parallel([angleAnimation, timerAnimation])
         .start(callback);
 
@@ -211,7 +209,7 @@ export class TimerAnimation extends PureComponent<IProps> {
     this.secondHalfCircleOpacity.setValue(0);
     const circleAnimation = Animated.sequence([
       // Wait until the timer is at the halfway point
-      Animated.delay(remainingTime - MS_PER_SECOND * this.props.maxTime / 2),
+      Animated.delay(remainingTime - MillisPer.SEC * this.props.maxTime / 2),
       // Flip the opacity of the semicircles
       Animated.timing(this.secondHalfCircleOpacity, {
         duration: 0,

@@ -4,10 +4,10 @@
 import memoizeOne from 'memoize-one';
 import React, { PureComponent, ReactElement } from 'react';
 import { Dimensions } from 'react-native';
-import Svg, { Circle, ClipPath, Defs, Line, Rect, Text } from 'react-native-svg';
+import Svg, { Circle, Line, Text } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
-import * as SecondsPer from '../common/SecondsPer';
+import * as MillisPer from '../common/MillisPer';
 
 import { TimerAnimation } from './TimerAnimation';
 
@@ -68,25 +68,20 @@ for (let i = 0; i < 60; i += 1) {
 
 const MAX_TIMES = [
   // 60 seconds
-  SecondsPer.MIN,
+  MillisPer.MIN,
   // 12 minutes
-  SecondsPer.MIN * 12,
+  MillisPer.MIN * 12,
   // 60 minutes
-  SecondsPer.HOUR,
+  MillisPer.HOUR,
   // 12 hours
-  SecondsPer.HOUR * 12,
+  MillisPer.HOUR * 12,
   // 24 hours
-  SecondsPer.DAY,
+  MillisPer.DAY,
   // 12 days
-  SecondsPer.DAY * 12,
+  MillisPer.DAY * 12,
   // 60 days
-  SecondsPer.DAY * 60,
+  MillisPer.DAY * 60,
 ];
-
-const defaultTimeLabels: string[] = new Array(12);
-for (let i = 0; i < 12; i += 1) {
-  defaultTimeLabels[i] = (i * 5).toString();
-}
 
 interface IProps {
   /** Timer is currently counting down */
@@ -97,7 +92,7 @@ interface IProps {
   end(): void;
 }
 interface IMaxTimeData {
-  /** Amount of time associated with full timer in seconds */
+  /** Amount of time associated with full timer in milliseconds */
   maxTime: number;
   /** List of labels associated with each bigTick */
   timeLabels: string[];
@@ -105,26 +100,26 @@ interface IMaxTimeData {
 /** SVG image representation of timer with a live display */
 export class TimerImage extends PureComponent<IProps> {
   /**
-   * Get data for max time on timer
+   * Get data for max time on timer - should only be computed once each time endTime changes
    * @param endTime endTime from state
    */
   private readonly getTimeData = memoizeOne((endTime: number): IMaxTimeData => {
-    const duration = (endTime - Date.now()) / 1000;
+    const duration = endTime - Date.now();
     let maxTime = MAX_TIMES.find((time: number): boolean => duration <= time);
     maxTime = maxTime === undefined ? Infinity : maxTime;
     let maxTimeInUnits: number;
     let units: string;
-    if (maxTime <= SecondsPer.MIN) {
-      maxTimeInUnits = maxTime;
+    if (maxTime <= MillisPer.MIN) {
+      maxTimeInUnits = maxTime / MillisPer.SEC;
       units = 'sec';
-    } else if (maxTime <= SecondsPer.HOUR) {
-      maxTimeInUnits = maxTime / SecondsPer.MIN;
+    } else if (maxTime <= MillisPer.HOUR) {
+      maxTimeInUnits = maxTime / MillisPer.MIN;
       units = 'min';
-    } else if (maxTime <= SecondsPer.DAY) {
-      maxTimeInUnits = maxTime / SecondsPer.HOUR;
+    } else if (maxTime <= MillisPer.DAY) {
+      maxTimeInUnits = maxTime / MillisPer.HOUR;
       units = 'hr';
     } else {
-      maxTimeInUnits = maxTime / SecondsPer.DAY;
+      maxTimeInUnits = maxTime / MillisPer.DAY;
       units = 'day';
     }
 

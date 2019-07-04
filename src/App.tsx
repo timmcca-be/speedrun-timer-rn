@@ -5,8 +5,6 @@ import { SoundPlayer } from './common/SoundPlayer';
 import { TimeForm } from './components/TimeForm';
 import { TimerImage } from './components/TimerImage';
 
-const MS_PER_SEC = 1000;
-
 // TODO: make this configurable
 const NUM_TICKS = 3;
 
@@ -50,10 +48,9 @@ export class App extends PureComponent<{}, IState> {
 
   /**
    * Start the timer
-   * @param seconds Number of seconds to count down
+   * @param endTime Time at which timer should end
    */
-  private readonly startTimer = (seconds: number): void => {
-    const endTime = Date.now() + seconds * MS_PER_SEC;
+  private readonly startTimer = (endTime: number): void => {
     this.setState({
       active: true,
       endTime,

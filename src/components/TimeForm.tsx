@@ -1,20 +1,22 @@
 import React, { PureComponent, ReactElement } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
+import * as MillisPer from '../common/MillisPer';
+
 interface IProps {
   /** Timer is currently counting down */
   active: boolean;
   /** Function to end timer when stop button is clicked */
   halt(): void;
   /**
-   * Function to start timer when start button is clicked
-   * @param seconds Number of seconds as read from the input
+   * Start the timer
+   * @param endTime Time at which timer should end
    */
-  start(seconds: number): void;
+  start(endTime: number): void;
 }
 /** Form used to input time and start/stop timer */
 export class TimeForm extends PureComponent<IProps> {
-  /** Current time in text box */
+  /** Current time in text box in milliseconds */
   private time = 0;
 
   public constructor(props: IProps) {
@@ -38,11 +40,11 @@ export class TimeForm extends PureComponent<IProps> {
    * @param value New time
    */
   private readonly changeTime = (value: string): void => {
-    this.time = parseFloat(value);
+    this.time = parseFloat(value) * MillisPer.SEC;
   }
 
   /** Start the timer */
   private readonly startTimer = (): void => {
-    this.props.start(this.time);
+    this.props.start(Date.now() + this.time);
   }
 }
