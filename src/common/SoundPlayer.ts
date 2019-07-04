@@ -1,7 +1,5 @@
 import Sound from 'react-native-sound';
 
-import { ISoundPlayer } from './ISoundPlayer';
-
 const loadSound: (name: string) => Promise<Sound> = async (name: string): Promise<Sound> =>
   new Promise<Sound>((resolve: (sound: Sound) => void): void => {
     const sound = new Sound(`${name}.wav`, Sound.MAIN_BUNDLE, (): void => {
@@ -20,14 +18,12 @@ const playSound: (soundPromise: Promise<Sound>) => Promise<void>
 const tick: Promise<Sound> = loadSound('tick');
 const ding: Promise<Sound> = loadSound('ding');
 
-export const SoundPlayer: ISoundPlayer = {
+// Don't need to track sound
+/* tslint:disable:no-floating-promises */
+export const SoundPlayer = {
   playDing(): void {
-    // Don't need to track sound
-    // tslint:disable-next-line:no-floating-promises
     playSound(ding);
   }, playTick(): void {
-    // Don't need to track sound
-    // tslint:disable-next-line:no-floating-promises
     playSound(tick);
   }, prepare(): void {
     // Don't need to do anything here
