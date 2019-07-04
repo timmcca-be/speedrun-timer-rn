@@ -2,14 +2,7 @@
 
 import { NativeModules } from 'react-native';
 
-interface ISoundPlayer {
-    /** Play ding */
-    playDing(): void;
-    /** Play numTicks ticks, one every second */
-    playTick(): void;
-    /** Play a sound silently to reduce lag on first play */
-    prepare(): void;
-}
+import { ISoundPlayer } from './ISoundPlayer';
 
 // tslint:disable-next-line:no-unsafe-any
 export const SoundPlayer: ISoundPlayer = NativeModules.SoundPlayer;

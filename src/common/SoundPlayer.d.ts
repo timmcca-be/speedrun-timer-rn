@@ -10,4 +10,4 @@ declare var _test: typeof other;
 
 // Export here so that the importing file can see the type
 // This is only for the TypeScript build process - React Native will import the correct file automatically
-export { SoundPlayer } from './SoundPlayer'; 
+export { SoundPlayer } from './SoundPlayer.android'; 

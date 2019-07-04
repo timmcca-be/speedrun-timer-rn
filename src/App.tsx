@@ -6,7 +6,6 @@ import { TimeForm } from './components/TimeForm';
 import { TimerImage } from './components/TimerImage';
 
 const MS_PER_SEC = 1000;
-const UPDATE_BUFFER = 100;
 
 // TODO: make this configurable
 const NUM_TICKS = 3;
@@ -16,35 +15,22 @@ interface IState {
   active: boolean;
   /** Time that timer should finish at */
   endTime?: number;
-  /** Number of remaining seconds on timer, rounded up */
-  remainingSeconds: number;
 }
 /** Container class with timer logic */
 export class App extends PureComponent<{}, IState> {
-  /** Has SoundPlayer.prepare been called yet? */
-  private prepared = false;
-
   public constructor(props: {}) {
     super(props);
     this.state = {
       active: false,
-      remainingSeconds: 0,
     };
-  }
-
-  /** If the timer is running, start waiting for the next update after the time is updated */
-  public componentDidUpdate(): void {
-    if (this.state.active) {
-      this.waitBeforeUpdate();
-    }
   }
 
   /** Create and return app view */
   public render(): ReactElement {
     return (
       <View>
-        <TimerImage {...this.state} />
-        <TimeForm active={this.state.active} start={this.startTimer} end={this.endTimer} />
+        <TimerImage {...this.state} end={this.endTimer} />
+        <TimeForm active={this.state.active} start={this.startTimer} halt={this.haltTimer} />
       </View>
     );
   }
@@ -54,7 +40,12 @@ export class App extends PureComponent<{}, IState> {
     this.setState({
       active: false,
     });
-    this.prepared = false;
+  }
+
+  /** Stop timer and end sound */
+  private readonly haltTimer = (): void => {
+    this.endTimer();
+    SoundPlayer.cancel();
   }
 
   /**
@@ -66,49 +57,7 @@ export class App extends PureComponent<{}, IState> {
     this.setState({
       active: true,
       endTime,
-      remainingSeconds: Math.ceil(seconds),
     });
-  }
-
-  /**
-   * Recursive function that updates the time until it reaches zero
-   */
-  private readonly updateTime = (): void => {
-    if (!this.state.active) {
-      return;
-    }
-    if (this.state.endTime === undefined) {
-      throw new Error('Timer was started without time');
-    }
-    const remainingSeconds = Math.ceil((this.state.endTime - Date.now()) / MS_PER_SEC);
-    if (remainingSeconds <= NUM_TICKS + 1 && !this.prepared) {
-      SoundPlayer.prepare();
-      this.prepared = true;
-    }
-    if (remainingSeconds === 0) {
-      SoundPlayer.playDing();
-      this.setState({
-        active: false,
-        remainingSeconds: 0,
-      });
-    } else if (remainingSeconds < this.state.remainingSeconds) {
-      if (remainingSeconds <= NUM_TICKS) {
-        SoundPlayer.playTick();
-      }
-      this.setState({ remainingSeconds });
-    } else {
-      // Calling this directly stalls the entire JS thread, but setInterval has startup lag
-      setTimeout(this.updateTime);
-    }
-  }
-
-  /**
-   * Wait until 100 ms before the next update, then start running updateTime.
-   */
-  private waitBeforeUpdate(): void {
-    if (this.state.endTime === undefined) {
-      throw new Error('Timer was started without time');
-    }
-    setTimeout(this.updateTime, (this.state.endTime - Date.now()) % MS_PER_SEC - UPDATE_BUFFER);
+    SoundPlayer.play(endTime, NUM_TICKS);
   }
 }

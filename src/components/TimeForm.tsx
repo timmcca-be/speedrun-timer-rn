@@ -5,7 +5,7 @@ interface IProps {
   /** Timer is currently counting down */
   active: boolean;
   /** Function to end timer when stop button is clicked */
-  end(): void;
+  halt(): void;
   /**
    * Function to start timer when start button is clicked
    * @param seconds Number of seconds as read from the input
@@ -28,7 +28,7 @@ export class TimeForm extends PureComponent<IProps> {
         <TextInput keyboardType="numeric" onChangeText={this.changeTime} />
         <Button
           title={this.props.active ? 'Stop' : 'Start'}
-          onPress={this.props.active ? this.props.end : this.startTimer} />
+          onPress={this.props.active ? this.props.halt : this.startTimer} />
       </View>
     );
   }

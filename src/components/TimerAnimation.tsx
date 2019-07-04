@@ -7,10 +7,13 @@ import { Circle, ClipPath, Defs, G, Line, Rect } from 'react-native-svg';
 
 import * as Colors from '../common/Colors';
 
+import { TimeDisplay } from './TimeDisplay';
+
 // Not my library, not my monkeys
 /* tslint:disable:variable-name no-any no-unsafe-any */
 const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedComponent(Circle);
 const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
+const AnimatedTimeDisplay: React.ComponentClass<any> = Animated.createAnimatedComponent(TimeDisplay);
 /* tslint:enable:variable-name no-any no-unsafe-any */
 
 const MS_PER_SECOND = 1000;
@@ -24,10 +27,10 @@ interface IProps {
   endTime?: number;
   /** Maximum time on the timer in seconds */
   maxTime: number;
-  /** Number of remaining seconds on timer, rounded up */
-  remainingSeconds: number;
   /** Parent SVG width/height in pixels */
   size: number;
+  /** Function to end timer when stop button is clicked */
+  end(): void;
 }
 /** The animated components of the timer SVG */
 export class TimerAnimation extends PureComponent<IProps> {
@@ -53,6 +56,9 @@ export class TimerAnimation extends PureComponent<IProps> {
     outputRange: [1, 0],
   });
 
+  /** Time display animated value */
+  private readonly timerAnim = new Animated.Value(0);
+
   public constructor(props: IProps) {
     super(props);
     this.startAnimation();
@@ -62,9 +68,9 @@ export class TimerAnimation extends PureComponent<IProps> {
    * @param prevProps previous props
    */
   public componentDidUpdate(prevProps: IProps): void {
-    if (!this.props.active && this.props.remainingSeconds !== 0) {
-      // If remainingTime is zero, we let the animation naturally end in case it is behind the timer.
+    if (prevProps.active && !this.props.active) {
       this.angleAnim.stopAnimation();
+      this.timerAnim.stopAnimation();
       this.secondHalfCircleOpacity.stopAnimation();
     } else if (!prevProps.active) {
       // If the timer was just started, start the animation
@@ -90,6 +96,11 @@ export class TimerAnimation extends PureComponent<IProps> {
             <Rect
               x={0} y={-50}
               width={50} height={100} />
+          </ClipPath>
+          <ClipPath id="sliverClip">
+            <Rect
+              x={-0.5} y={-50}
+              width={1} height={50} />
           </ClipPath>
         </Defs>
         {/* The timer line, which is above this, has a white semicircle
@@ -136,6 +147,14 @@ export class TimerAnimation extends PureComponent<IProps> {
           clipPath="url(#rightCircleClip)"
           fill={Colors.RED}
           opacity={this.firstHalfCircleOpacity} />
+        <Circle
+          cx={0} cy={0} r={31}
+          clipPath="url(#sliverClip)"
+          fill={Colors.RED} />
+        <Circle
+          cx={0} cy={0} r={10}
+          fill={Colors.GRAY} />
+        <AnimatedTimeDisplay seconds={this.timerAnim} />
       </>
     );
   }
@@ -152,6 +171,7 @@ export class TimerAnimation extends PureComponent<IProps> {
     const maxMs = MS_PER_SECOND * this.props.maxTime;
 
     const remainingTime = this.props.endTime - Date.now();
+    this.timerAnim.setValue(remainingTime / MS_PER_SECOND);
     const start = 1 - remainingTime / maxMs;
     this.angleAnim.setValue(start);
 
@@ -160,6 +180,7 @@ export class TimerAnimation extends PureComponent<IProps> {
     let callback: (() => void) | undefined;
     if (remainingTime <= MAX_DURATION) {
       end = 1;
+      callback = this.props.end;
     } else {
       end = start + duration / maxMs;
       callback = this.startAnimation;
@@ -170,12 +191,19 @@ export class TimerAnimation extends PureComponent<IProps> {
       toValue: end,
       useNativeDriver: true,
     });
+    const timerAnimation = Animated.timing(this.timerAnim, {
+      duration,
+      easing: Easing.linear,
+      toValue: (remainingTime - duration) / MS_PER_SECOND,
+      // Can't use native driver because the time display isn't native
+    });
 
     if (remainingTime <= maxMs / 2 || remainingTime + duration >= maxMs / 2) {
       /* If we're already in the second half or we won't get into the second half,
          we only need to do the angle animation */
       this.secondHalfCircleOpacity.setValue(remainingTime <= maxMs / 2 ? 1 : 0);
-      angleAnimation.start(callback);
+      Animated.parallel([angleAnimation, timerAnimation])
+        .start(callback);
 
       return;
     }
@@ -192,7 +220,7 @@ export class TimerAnimation extends PureComponent<IProps> {
       }),
     ]);
 
-    Animated.parallel([angleAnimation, circleAnimation])
+    Animated.parallel([angleAnimation, timerAnimation, circleAnimation])
       .start(callback);
   }
 }
