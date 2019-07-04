@@ -19,7 +19,7 @@ export class SecondsDisplay extends Component<IProps> {
    * @param seconds Number of seconds remaining
    */
   private readonly getFormattedTime = memoizeOne((seconds: number): string => {
-    if (seconds === 0) {
+    if (seconds <= 0) {
       return '';
     }
     const millis = seconds * MillisPer.SEC;
