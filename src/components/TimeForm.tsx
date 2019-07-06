@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactElement } from 'react';
+import React, { PureComponent, ReactElement, SyntheticEvent } from 'react';
 import { Button, TextInput, View } from 'react-native';
 
 import * as MillisPer from '../common/MillisPer';
@@ -27,7 +27,7 @@ export class TimeForm extends PureComponent<IProps> {
   public render(): ReactElement {
     return (
       <View>
-        <TextInput keyboardType="numeric" onChangeText={this.changeTime} />
+        <TextInput keyboardType="numeric" onChangeText={this.changeTime} editable={!this.props.active} />
         <Button
           title={this.props.active ? 'Stop' : 'Start'}
           onPress={this.props.active ? this.props.halt : this.startTimer} />
@@ -44,7 +44,7 @@ export class TimeForm extends PureComponent<IProps> {
   }
 
   /** Start the timer */
-  private readonly startTimer = (): void => {
-    this.props.start(Date.now() + this.time);
+  private readonly startTimer = (e: SyntheticEvent): void => {
+    this.props.start(e.timeStamp + this.time);
   }
 }

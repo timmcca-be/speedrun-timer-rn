@@ -32,37 +32,37 @@ interface ILabel {
   y: string;
 }
 
-const bigTicks: ITick[] = new Array(12);
-const smallTicks: ITick[] = new Array(48);
+const bigTicks: ITick[] = [];
+const smallTicks: ITick[] = [];
 // Time labels associated with each bigTick (e.g. 0, 5, 10, ...)
-const labels: ILabel[] = new Array(12);
+const labels: ILabel[] = [];
 for (let i = 0; i < 60; i += 1) {
   const rad: number = i * Math.PI / 30;
   const cos: number = Math.cos(rad);
   const sin: number = Math.sin(rad);
   if (i % 5 === 0) {
-    bigTicks[i / 5] = {
+    bigTicks.push({
       x1: cos * 28,
       y1: sin * 28,
       // tslint:disable-next-line:object-literal-sort-keys
       x2: cos * 17,
       y2: sin * 17,
-    };
+    });
     // -cos here because the array index actually has to be associated with the position.
     // Without this, the text would be in the wrong spot and upside down.
     // For the ticks, it doesn't matter which one is in which index.
-    labels[i / 5] = {
+    labels.push({
       x: (sin * 33).toFixed(4),
       y: (-cos * 33).toFixed(4),
-    };
+    });
   } else {
-    smallTicks[i - Math.floor(i / 5)] = {
+    smallTicks.push({
       x1: cos * 28,
       y1: sin * 28,
       // tslint:disable-next-line:object-literal-sort-keys
       x2: cos * 24,
       y2: sin * 24,
-    };
+    });
   }
 }
 
@@ -82,6 +82,42 @@ const MAX_TIMES = [
   // 60 days
   MillisPer.DAY * 60,
 ];
+
+const getTimeData = (endTime: number): IMaxTimeData => {
+  const duration = endTime - Date.now();
+  const maxTime = MAX_TIMES.find((time: number): boolean => duration <= time);
+  if (maxTime === undefined) {
+    return {
+      maxTime: duration,
+      timeLabels: new Array(12).fill(''),
+    };
+  }
+  let maxTimeInUnits: number;
+  let timeLabels: string[];
+  if (maxTime <= MillisPer.MIN) {
+    maxTimeInUnits = maxTime / MillisPer.SEC;
+    timeLabels = ['sec'];
+  } else if (maxTime <= MillisPer.HOUR) {
+    maxTimeInUnits = maxTime / MillisPer.MIN;
+    timeLabels = ['min'];
+  } else if (maxTime <= MillisPer.DAY) {
+    maxTimeInUnits = maxTime / MillisPer.HOUR;
+    timeLabels = ['hr'];
+  } else {
+    maxTimeInUnits = maxTime / MillisPer.DAY;
+    timeLabels = ['day'];
+  }
+
+  const ratio = maxTimeInUnits / 12;
+  for (let i = 1; i < 12; i += 1) {
+    timeLabels[i] = (i * ratio).toString();
+  }
+
+  return {
+    maxTime,
+    timeLabels,
+  };
+};
 
 interface IProps {
   /** Timer is currently counting down */
@@ -103,47 +139,15 @@ export class TimerImage extends PureComponent<IProps> {
    * Get data for max time on timer - should only be computed once each time endTime changes
    * @param endTime endTime from state
    */
-  private readonly getTimeData = memoizeOne((endTime: number): IMaxTimeData => {
-    const duration = endTime - Date.now();
-    let maxTime = MAX_TIMES.find((time: number): boolean => duration <= time);
-    maxTime = maxTime === undefined ? Infinity : maxTime;
-    let maxTimeInUnits: number;
-    let units: string;
-    if (maxTime <= MillisPer.MIN) {
-      maxTimeInUnits = maxTime / MillisPer.SEC;
-      units = 'sec';
-    } else if (maxTime <= MillisPer.HOUR) {
-      maxTimeInUnits = maxTime / MillisPer.MIN;
-      units = 'min';
-    } else if (maxTime <= MillisPer.DAY) {
-      maxTimeInUnits = maxTime / MillisPer.HOUR;
-      units = 'hr';
-    } else {
-      maxTimeInUnits = maxTime / MillisPer.DAY;
-      units = 'day';
-    }
-
-    const timeLabels: string[] = new Array(12);
-    const ratio = maxTimeInUnits / 12;
-    for (let i = 0; i < 12; i += 1) {
-      timeLabels[i] = maxTime === Infinity
-        ? (i === 0 ? '0' : '')
-        : (i === 0 ? units : (i * ratio).toString());
-    }
-
-    return {
-      maxTime,
-      timeLabels,
-    };
-  });
+  private readonly getTimeData = memoizeOne(getTimeData);
 
   /** Create and return the timer SVG */
   public render(): ReactElement {
-    const size: number = Dimensions.get('window').width * 0.9;
+    const size: number = Dimensions.get('window').width;
     const { maxTime, timeLabels } = this.getTimeData(this.props.endTime === undefined ? 60 : this.props.endTime);
 
     return (
-      <Svg width={size} height={size} viewBox="-50 -50 100 100" style={{ margin: '5%' }}>
+      <Svg width={size} height={size} viewBox="-50 -50 100 100">
         <Circle
           cx={0} cy={0} r={50}
           fill={Colors.GRAY} />
@@ -154,14 +158,6 @@ export class TimerImage extends PureComponent<IProps> {
           cx={0} cy={0} r={43}
           fill={Colors.WHITE} />
         <TimerAnimation {...this.props} maxTime={maxTime} size={size} />
-        {/*<Text
-          x={0} y={timeText.length > 2 ? 2.2 : 3.2}
-          textAnchor="middle"
-          fontFamily="BetecknaLowerCase"
-          fontSize={timeText.length > 2 ? 7 : 9}
-          fill={Colors.BLACK}>
-          {timeText}
-        </Text>*/}
         {
           bigTicks.map((tick: ITick, i: number) => (
             <Line key={i}

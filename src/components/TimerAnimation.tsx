@@ -11,11 +11,11 @@ import * as MillisPer from '../common/MillisPer';
 import { SecondsDisplay } from './SecondsDisplay';
 
 // Not my library, not my monkeys
-/* tslint:disable:variable-name no-any no-unsafe-any */
+/* tslint:disable:no-any no-unsafe-any */
 const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedComponent(Circle);
 const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
 const AnimatedSecondsDisplay: React.ComponentClass<any> = Animated.createAnimatedComponent(SecondsDisplay);
-/* tslint:enable:variable-name no-any no-unsafe-any */
+/* tslint:enable:no-any no-unsafe-any */
 
 // Excessively long animations overwhelm the memory, so restrict individual size and daisy-chain them
 const MAX_DURATION = MillisPer.SEC * 10;
@@ -34,30 +34,24 @@ interface IProps {
 }
 /** The animated components of the timer SVG */
 export class TimerAnimation extends PureComponent<IProps> {
-
   /** Determines angle of timer line */
-  private readonly angleAnim = new Animated.Value(1);
+  private readonly angleAnim = new Animated.Value(0);
   /** Angle of timer line */
   private readonly angleTransform = this.angleAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['360deg', '0deg'],
+    outputRange: ['0deg', '360deg'],
   });
 
   // These values are always opposite - one is always 0, and one is always 1.
   // Animated paths don't work with this library, so I had to fake it with a few layered semicircles.
   // The logic switches depending on which side of the image the line is on (see the render function for details).
-  /** Second half: any time the line is on the right side of the image */
-  private readonly secondHalfCircleOpacity = new Animated.Value(1);
   /** First half: any time the line is on the left side of the image */
-  // Has to be after second half since its value depends on second half
-  // tslint:disable-next-line:member-ordering
-  private readonly firstHalfCircleOpacity = this.secondHalfCircleOpacity.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0],
-  });
+  private readonly firstHalfCircleOpacity = new Animated.Value(0);
+  /** Second half: any time the line is on the right side of the image */
+  private readonly secondHalfCircleOpacity = Animated.subtract(1, this.firstHalfCircleOpacity);
 
-  /** Time display animated value */
-  private readonly timerAnim = new Animated.Value(0);
+  /** Animated value representing the current time in seconds */
+  private readonly timerSecondsAnim = new Animated.Value(0);
 
   public constructor(props: IProps) {
     super(props);
@@ -69,9 +63,7 @@ export class TimerAnimation extends PureComponent<IProps> {
    */
   public componentDidUpdate(prevProps: IProps): void {
     if (prevProps.active && !this.props.active) {
-      this.angleAnim.stopAnimation();
-      this.timerAnim.stopAnimation();
-      this.secondHalfCircleOpacity.stopAnimation();
+      this.timerSecondsAnim.stopAnimation();
     } else if (!prevProps.active) {
       // If the timer was just started, start the animation
       this.startAnimation();
@@ -154,7 +146,7 @@ export class TimerAnimation extends PureComponent<IProps> {
         <Circle
           cx={0} cy={0} r={10}
           fill={Colors.GRAY} />
-        <AnimatedSecondsDisplay seconds={this.timerAnim} />
+        <AnimatedSecondsDisplay seconds={this.timerSecondsAnim} />
       </>
     );
   }
@@ -169,56 +161,25 @@ export class TimerAnimation extends PureComponent<IProps> {
     }
 
     const remainingTime = this.props.endTime - Date.now();
-    this.timerAnim.setValue(remainingTime / MillisPer.SEC);
-    const start = 1 - remainingTime / this.props.maxTime;
-    this.angleAnim.setValue(start);
-
     const duration = remainingTime % MAX_DURATION;
-    let end = start + duration / this.props.maxTime;
-    let callback: (() => void) | undefined;
-    if (remainingTime <= MAX_DURATION) {
-      end = 1;
-      callback = this.props.end;
-    } else {
-      end = start + duration / this.props.maxTime;
-      callback = this.startAnimation;
-    }
-    const angleAnimation = Animated.timing(this.angleAnim, {
+    const remainingTimeAtEnd = remainingTime - duration;
+
+    this.firstHalfCircleOpacity.setValue(remainingTime >= this.props.maxTime / 2 ? 1 : 0);
+
+    this.timerSecondsAnim.setValue(remainingTime / MillisPer.SEC);
+    this.angleAnim.setValue(remainingTime / this.props.maxTime);
+
+    Animated.parallel([Animated.timing(this.timerSecondsAnim, {
       duration,
       easing: Easing.linear,
-      toValue: end,
+      toValue: remainingTimeAtEnd / MillisPer.SEC,
+      // Can't use native driver because the display is not native
+    }), Animated.timing(this.angleAnim, {
+      duration,
+      easing: Easing.linear,
+      toValue: remainingTimeAtEnd / this.props.maxTime,
       useNativeDriver: true,
-    });
-    const timerAnimation = Animated.timing(this.timerAnim, {
-      duration,
-      easing: Easing.linear,
-      toValue: (remainingTime - duration) / MillisPer.SEC,
-      // Can't use native driver because the time display isn't native
-    });
-
-    if (remainingTime <= this.props.maxTime / 2 || remainingTime + duration >= this.props.maxTime / 2) {
-      /* If we're already in the second half or we won't get into the second half,
-         we only need to do the angle animation */
-      this.secondHalfCircleOpacity.setValue(remainingTime <= this.props.maxTime / 2 ? 1 : 0);
-      Animated.parallel([angleAnimation, timerAnimation])
-        .start(callback);
-
-      return;
-    }
-
-    this.secondHalfCircleOpacity.setValue(0);
-    const circleAnimation = Animated.sequence([
-      // Wait until the timer is at the halfway point
-      Animated.delay(remainingTime - MillisPer.SEC * this.props.maxTime / 2),
-      // Flip the opacity of the semicircles
-      Animated.timing(this.secondHalfCircleOpacity, {
-        duration: 0,
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]);
-
-    Animated.parallel([angleAnimation, timerAnimation, circleAnimation])
-      .start(callback);
+    })])
+    .start(remainingTimeAtEnd === 0 ? this.props.end : this.startAnimation);
   }
 }
