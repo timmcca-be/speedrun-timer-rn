@@ -5,6 +5,10 @@ import { SoundPlayer } from './common/SoundPlayer';
 import { TimeForm } from './components/TimeForm';
 import { TimerImage } from './components/TimerImage';
 
+// Doing this here saves us from having to disable these in the render logic
+// tslint:disable-next-line:no-any no-unsafe-any
+const AnimatedView: React.ComponentClass<any> = Animated.View;
+
 // TODO: make this configurable
 const NUM_TICKS = 3;
 
@@ -24,11 +28,12 @@ export class App extends PureComponent<{}, IState> {
   /** Margin ratio */
   // tslint:disable-next-line:member-ordering
   private readonly marginAnim = Animated.multiply(
-    Animated.subtract(MAX_TIMER_SCALE, this.scaleAnim), -1);
+    Animated.subtract(MAX_TIMER_SCALE, this.scaleAnim),
+    -1);
   /** Timer opacity */
   // tslint:disable-next-line:member-ordering
-  private readonly opacityAnim = Animated.add(
-    this.scaleAnim, 1 - MAX_TIMER_SCALE);
+  private readonly opacityAnim =
+    Animated.add(this.scaleAnim, 1 - MAX_TIMER_SCALE);
 
   public constructor(props: {}) {
     super(props);
@@ -42,11 +47,9 @@ export class App extends PureComponent<{}, IState> {
     const translateYAnim = Animated.multiply(this.marginAnim,
       Dimensions.get('window').width);
 
-    // Disabled for Animated.View
-    /* tslint:disable:no-unsafe-any */
     return (
       <View>
-        <Animated.View
+        <AnimatedView
           style={{
             opacity: this.opacityAnim,
             transform: [{
@@ -57,8 +60,8 @@ export class App extends PureComponent<{}, IState> {
             }],
           }}>
           <TimerImage {...this.state} end={this.endTimer} />
-        </Animated.View>
-        <Animated.View
+        </AnimatedView>
+        <AnimatedView
           style={{
             transform: [ {
               translateY: translateYAnim,
@@ -68,10 +71,9 @@ export class App extends PureComponent<{}, IState> {
             active={this.state.active}
             start={this.startTimer}
             halt={this.haltTimer} />
-        </Animated.View>
+        </AnimatedView>
       </View>
     );
-    /* tslint:enable:no-unsafe-any */
   }
 
   /** Stop timer */
