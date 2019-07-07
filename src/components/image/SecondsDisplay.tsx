@@ -5,8 +5,8 @@ import memoizeOne from 'memoize-one';
 import React, { Component, ReactElement } from 'react';
 import { Text } from 'react-native-svg';
 
-import * as Colors from '../common/Colors';
-import * as MillisPer from '../common/MillisPer';
+import * as Colors from '../../common/Colors';
+import * as MillisPer from '../../common/MillisPer';
 
 interface IProps {
   /** Number of seconds to display */

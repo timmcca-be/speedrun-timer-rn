@@ -24,6 +24,9 @@ export class App extends PureComponent<{}, IState> {
   /** Margin ratio */
   // tslint:disable-next-line:member-ordering
   private readonly marginAnim = Animated.multiply(Animated.subtract(MAX_TIMER_SCALE, this.scaleAnim), -1);
+  /** Timer opacity */
+  // tslint:disable-next-line:member-ordering
+  private readonly opacityAnim = Animated.add(this.scaleAnim, 1 - MAX_TIMER_SCALE);
 
   public constructor(props: {}) {
     super(props);
@@ -42,7 +45,8 @@ export class App extends PureComponent<{}, IState> {
       <View>
         <Animated.View
           style={{
-            transform: [ {
+            opacity: this.opacityAnim,
+            transform: [{
               // tslint:disable-next-line:no-magic-numbers
               translateY: Animated.divide(translateYAnim, 2),
             }, {
