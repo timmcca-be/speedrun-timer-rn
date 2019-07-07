@@ -9,8 +9,10 @@ import * as Colors from '../../common/Colors';
 
 // Not my library, not my monkeys
 /* tslint:disable:no-any no-unsafe-any */
-const AnimatedCircle: React.ComponentClass<any> = Animated.createAnimatedComponent(Circle);
-const AnimatedG: React.ComponentClass<any> = Animated.createAnimatedComponent(G);
+const AnimatedCircle: React.ComponentClass<any> =
+  Animated.createAnimatedComponent(Circle);
+const AnimatedG: React.ComponentClass<any> =
+  Animated.createAnimatedComponent(G);
 /* tslint:enable:no-any no-unsafe-any */
 
 interface IProps {
@@ -50,13 +52,15 @@ export class TimerCircles extends PureComponent<IProps> {
         </Defs>
         {/* The timer line, which is above this, has a white semicircle
             attached to its right side (when it is pointed up).
-            During the first half, it progressively covers this semicircle on the right side as it rotates. */}
+            During the first half, it progressively covers this semicircle
+            on the right side as it rotates. */}
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#leftCircleClip)"
           fill={Colors.RED}
           opacity={this.props.firstHalfAnim} />
-        {/* During the second half, this semicircle turns on and starts to get covered. */}
+        {/* During the second half, this semicircle turns on
+            and starts to get covered. */}
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"
@@ -82,9 +86,10 @@ export class TimerCircles extends PureComponent<IProps> {
             strokeWidth={1.7}
             strokeLinecap="round" />
         </AnimatedG>
-        {/* During the first half, this hides the white semicircle on the right side.
-            After that, it disappears so the bottom right semicircle can get covered
-            as the white semicircle comes back around. */}
+        {/* During the first half, this hides the white semicircle
+            on the right side. After that, it disappears so the
+            bottom right semicircle can get covered as the white
+            semicircle comes back around. */}
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"

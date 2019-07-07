@@ -12,10 +12,13 @@ import { SecondsDisplay } from './SecondsDisplay';
 import { TimerCircles } from './TimerCircles';
 
 // Not my library, not my monkeys
-// tslint:disable-next-line:no-any no-unsafe-any
-const AnimatedSecondsDisplay: React.ComponentClass<any> = Animated.createAnimatedComponent(SecondsDisplay);
+/* tslint:disable:no-any no-unsafe-any */
+const AnimatedSecondsDisplay: React.ComponentClass<any> =
+  Animated.createAnimatedComponent(SecondsDisplay);
+/* tslint:enable:no-any no-unsafe-any */
 
-// Excessively long animations overwhelm the memory, so restrict individual size and daisy-chain them
+/* Excessively long animations overwhelm the memory,
+   so restrict individual size and daisy-chain them */
 const MAX_DURATION = MillisPer.SEC * 10;
 
 interface IProps {
@@ -55,7 +58,8 @@ export class TimerAnimation extends PureComponent<IProps> {
     };
   }
   /**
-   * If the timer was just activated, start the animation. If it was just deactivated, stop the animation.
+   * If the timer was just activated, start the animation.
+   * If it was just deactivated, stop the animation.
    * @param prevProps previous props
    */
   public componentDidUpdate(prevProps: IProps): void {
@@ -100,7 +104,8 @@ export class TimerAnimation extends PureComponent<IProps> {
     const duration = remainingTime % MAX_DURATION;
     const remainingTimeAtEnd = remainingTime - duration;
 
-    this.firstHalfAnim.setValue(remainingTime >= this.props.maxTime / 2 ? 1 : 0);
+    this.firstHalfAnim.setValue(
+      remainingTime >= this.props.maxTime / 2 ? 1 : 0);
 
     this.timerSecondsAnim.setValue(remainingTime / MillisPer.SEC);
     this.angleAnim.setValue(remainingTime / this.props.maxTime);

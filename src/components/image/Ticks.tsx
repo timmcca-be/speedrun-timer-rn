@@ -43,7 +43,7 @@ for (let i = 0; i < 60; i += 1) {
       x2: cos * 17,
       y2: sin * 17,
     });
-    // -cos here because the array index actually has to be associated with the position.
+    // -cos here because the array index has to be associated with the position.
     // Without this, the text would be in the wrong spot and upside down.
     // For the ticks, it doesn't matter which one is in which index.
     labels.push({

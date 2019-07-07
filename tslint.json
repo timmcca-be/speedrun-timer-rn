@@ -21,6 +21,7 @@
                 "allow-trailing-underscore",
                 "ban-keywords"
             ]
-        }
+        },
+        "max-line-length": [true, 80]
     }
 }

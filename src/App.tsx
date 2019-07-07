@@ -23,10 +23,12 @@ export class App extends PureComponent<{}, IState> {
   private readonly scaleAnim = new Animated.Value(MIN_TIMER_SCALE);
   /** Margin ratio */
   // tslint:disable-next-line:member-ordering
-  private readonly marginAnim = Animated.multiply(Animated.subtract(MAX_TIMER_SCALE, this.scaleAnim), -1);
+  private readonly marginAnim = Animated.multiply(
+    Animated.subtract(MAX_TIMER_SCALE, this.scaleAnim), -1);
   /** Timer opacity */
   // tslint:disable-next-line:member-ordering
-  private readonly opacityAnim = Animated.add(this.scaleAnim, 1 - MAX_TIMER_SCALE);
+  private readonly opacityAnim = Animated.add(
+    this.scaleAnim, 1 - MAX_TIMER_SCALE);
 
   public constructor(props: {}) {
     super(props);
@@ -37,7 +39,8 @@ export class App extends PureComponent<{}, IState> {
 
   /** Create and return app view */
   public render(): ReactElement {
-    const translateYAnim = Animated.multiply(this.marginAnim, Dimensions.get('window').width);
+    const translateYAnim = Animated.multiply(this.marginAnim,
+      Dimensions.get('window').width);
 
     // Disabled for Animated.View
     /* tslint:disable:no-unsafe-any */
@@ -61,7 +64,10 @@ export class App extends PureComponent<{}, IState> {
               translateY: translateYAnim,
             }],
           }}>
-          <TimeForm active={this.state.active} start={this.startTimer} halt={this.haltTimer} />
+          <TimeForm
+            active={this.state.active}
+            start={this.startTimer}
+            halt={this.haltTimer} />
         </Animated.View>
       </View>
     );

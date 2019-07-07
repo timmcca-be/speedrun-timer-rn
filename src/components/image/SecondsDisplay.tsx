@@ -51,7 +51,13 @@ export class SecondsDisplay extends Component<IProps> {
       return `${Math.ceil(bigUnitAmount)}${bigUnitText}`;
     }
 
-    return `${Math.floor(bigUnitAmount)}${bigUnitText}${Math.ceil((millis % bigUnit) / smallUnit)}`;
+    return `${
+      Math.floor(bigUnitAmount)
+    }${
+      bigUnitText
+    }${
+      Math.ceil((millis % bigUnit) / smallUnit)
+    }`;
   });
 
   public constructor(props: IProps) {
@@ -80,7 +86,9 @@ export class SecondsDisplay extends Component<IProps> {
     const nextSeconds = Math.ceil(nextProps.seconds);
 
     return seconds !== nextSeconds
-        // Reminder that the order here is critical - flipping these will remove the memoization benefits
-        && this.getFormattedTime(seconds) !== this.getFormattedTime(nextSeconds);
+        // Reminder that the order here is critical
+        // Flipping these will remove the memoization benefits
+        && this.getFormattedTime(seconds)
+          !== this.getFormattedTime(nextSeconds);
   }
 }

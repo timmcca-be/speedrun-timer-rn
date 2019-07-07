@@ -49,25 +49,25 @@ export class TimeForm extends PureComponent<IProps, IState> {
       <View style={{
           alignItems: 'center',
         }}>
-        {/* TODO: color code this so it's clear where the "cursor" is */}
-        <Text style={{
-            fontFamily: 'BetecknaLowerCase',
-            fontSize: 36,
-            marginBottom: 16,
-            textAlign: 'center',
-          }}>
-          {`${
-            this.getHoursString()
-          }h ${
-            this.getMinutesString()
-          }m ${
-            this.getSecondsString()
-          }.${
-            this.getMillisString()
-          }s`}
-        </Text>
         {
-          this.props.active ? undefined : (
+          // TODO: color code input display so it's clear where the "cursor" is
+          this.props.active ? undefined : (<>
+            <Text style={{
+                fontFamily: 'BetecknaLowerCase',
+                fontSize: 36,
+                marginBottom: 16,
+                textAlign: 'center',
+              }}>
+              {`${
+                this.getHoursString()
+              }h ${
+                this.getMinutesString()
+              }m ${
+                this.getSecondsString()
+              }.${
+                this.getMillisString()
+              }s`}
+            </Text>
             <View style={{
                 flexDirection: 'row',
                 flexWrap: 'wrap',
@@ -86,9 +86,10 @@ export class TimeForm extends PureComponent<IProps, IState> {
                 onPress={(): void => { this.addNum(0); }} />
               <KeypadButton text="⌫" onPress={this.backspace} />
             </View>
-          )
+          </>)
         }
-        <TouchableOpacity onPress={this.props.active ? this.props.halt : this.startTimer}
+        <TouchableOpacity
+          onPress={this.props.active ? this.props.halt : this.startTimer}
           style={{
             backgroundColor: Colors.RED,
             borderRadius: 35,
@@ -123,7 +124,8 @@ export class TimeForm extends PureComponent<IProps, IState> {
         millis: `${this.state.millis}${num}`,
       });
     } else {
-      if (this.state.time[0] !== '0' || (this.state.time.length === 0 && num === 0)) {
+      if (this.state.time[0] !== '0'
+        || (this.state.time.length === 0 && num === 0)) {
         return;
       }
       this.setState({

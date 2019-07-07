@@ -82,7 +82,8 @@ interface IMaxTimeData {
 /** SVG image representation of timer with a live display */
 export class TimerImage extends PureComponent<IProps> {
   /**
-   * Get data for max time on timer - should only be computed once each time endTime changes
+   * Get data for max time on timer
+   *  - should only be computed once each time endTime changes
    * @param endTime endTime from state
    */
   private readonly getTimeData = memoizeOne(getTimeData);
@@ -90,7 +91,8 @@ export class TimerImage extends PureComponent<IProps> {
   /** Create and return the timer SVG */
   public render(): ReactElement {
     const size: number = Dimensions.get('window').width;
-    const { maxTime, timeLabels } = this.getTimeData(this.props.endTime === undefined ? 60 : this.props.endTime);
+    const endTime = this.props.endTime === undefined ? 0 : this.props.endTime;
+    const { maxTime, timeLabels } = this.getTimeData(endTime);
 
     return (
       <Svg width={size} height={size} viewBox="-50 -50 100 100">
