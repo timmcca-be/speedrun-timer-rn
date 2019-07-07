@@ -53,6 +53,7 @@ export class App extends PureComponent<{}, IState> {
           style={{
             opacity: this.opacityAnim,
             transform: [{
+              // Dividing by 2 to get half
               // tslint:disable-next-line:no-magic-numbers
               translateY: Animated.divide(translateYAnim, 2),
             }, {
