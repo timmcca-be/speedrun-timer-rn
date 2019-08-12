@@ -9,6 +9,7 @@ import { KeypadButton } from './KeypadButton';
 const NUM_MILLI_DIGITS = 3;
 const MINUTE_INDEX = 2;
 const SECOND_INDEX = 4;
+const TIME_UNIT_LENGTH = 2;
 
 // tslint:disable-next-line:no-magic-numbers
 const KEYPAD_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -45,12 +46,38 @@ export class TimeForm extends PureComponent<IProps, IState> {
 
   /** Create and return time entry form */
   public render(): ReactElement {
+    let firstNonZeroIndex = this.state.time.split('')
+      .findIndex((val: string) => val !== '0');
+    if (firstNonZeroIndex === -1) {
+      firstNonZeroIndex = Infinity;
+    }
+
+    let colorSwitchIndex = firstNonZeroIndex;
+    if (firstNonZeroIndex >= SECOND_INDEX) {
+      colorSwitchIndex += TIME_UNIT_LENGTH;
+    } if (firstNonZeroIndex >= MINUTE_INDEX) {
+      colorSwitchIndex += TIME_UNIT_LENGTH;
+    }
+    const timeString = `${
+      this.getHoursString()
+    }h ${
+      this.getMinutesString()
+    }m ${
+      this.getSecondsString()
+    }`;
+
+    const millisString = `.${this.state.millis}`;
+
+    let millisZeros = '';
+    for (let i = this.state.millis.length; i < NUM_MILLI_DIGITS; i += 1) {
+      millisZeros += '0';
+    }
+
     return (
       <View style={{
           alignItems: 'center',
         }}>
         {
-          // TODO: color code input display so it's clear where the "cursor" is
           this.props.active ? undefined : (<>
             <Text style={{
                 fontFamily: 'BetecknaLowerCase',
@@ -58,15 +85,13 @@ export class TimeForm extends PureComponent<IProps, IState> {
                 marginBottom: 16,
                 textAlign: 'center',
               }}>
-              {`${
-                this.getHoursString()
-              }h ${
-                this.getMinutesString()
-              }m ${
-                this.getSecondsString()
-              }.${
-                this.getMillisString()
-              }s`}
+              { timeString.substring(0, colorSwitchIndex) }
+              <Text style={{ color: Colors.BLACK }}>
+                { timeString.substring(colorSwitchIndex)
+                    + (this.state.inputtingMillis ? millisString : '') }
+              </Text>
+              { (this.state.inputtingMillis ? '' : millisString)
+                  + millisZeros }
             </Text>
             <View style={{
                 flexDirection: 'row',
