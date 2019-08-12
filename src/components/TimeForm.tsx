@@ -88,10 +88,11 @@ export class TimeForm extends PureComponent<IProps, IState> {
               { timeString.substring(0, colorSwitchIndex) }
               <Text style={{ color: Colors.BLACK }}>
                 { timeString.substring(colorSwitchIndex)
-                    + (this.state.inputtingMillis ? millisString : '') }
+                    + (this.state.inputtingMillis ? millisString : '')
+                    + (millisZeros.length === 0 ? 's' : '') }
               </Text>
               { (this.state.inputtingMillis ? '' : millisString)
-                  + millisZeros }
+                  + millisZeros + (millisZeros.length === 0 ? '' : 's') }
             </Text>
             <View style={{
                 flexDirection: 'row',
