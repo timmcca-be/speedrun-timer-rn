@@ -80,6 +80,7 @@ export class TimeForm extends PureComponent<IProps, IState> {
         {
           this.props.active ? undefined : (<>
             <Text style={{
+                color: Colors.GRAY,
                 fontFamily: 'BetecknaLowerCase',
                 fontSize: 36,
                 marginBottom: 16,

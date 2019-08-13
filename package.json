@@ -12,7 +12,6 @@
     "memoize-one": "^5.0.4",
     "react": "16.8.3",
     "react-native": "0.59.9",
-    "react-native-sound": "^0.10.12",
     "react-native-svg": "^9.5.1",
     "react-test-renderer": "16.8.3"
   },
