@@ -76,7 +76,7 @@ export class Ticks extends PureComponent<IProps> {
             <Line key={i}
               x1={tick.x1} y1={tick.y1}
               x2={tick.x2} y2={tick.y2}
-              stroke={Colors.BLACK}
+              stroke={Colors.FOREGROUND}
               strokeWidth={0.6}
               strokeLinecap="round" />
           ))
@@ -86,7 +86,7 @@ export class Ticks extends PureComponent<IProps> {
             <Line key={i}
               x1={tick.x1} y1={tick.y1}
               x2={tick.x2} y2={tick.y2}
-              stroke={Colors.BLACK}
+              stroke={Colors.FOREGROUND}
               strokeWidth={0.25}
               strokeLinecap="round" />
           ))
@@ -99,7 +99,7 @@ export class Ticks extends PureComponent<IProps> {
               textAnchor="middle"
               fontFamily="BetecknaLowerCase"
               fontSize={8}
-              fill={Colors.BLACK}>
+              fill={Colors.FOREGROUND}>
               {this.props.timeLabels[i]}
             </Text>
           ))

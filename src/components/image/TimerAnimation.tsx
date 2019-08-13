@@ -82,10 +82,10 @@ export class TimerAnimation extends PureComponent<IProps> {
         <Circle
           cx={0} cy={0} r={31}
           clipPath="url(#sliverClip)"
-          fill={Colors.RED} />
+          fill={Colors.ACCENT} />
         <Circle
           cx={0} cy={0} r={10}
-          fill={Colors.GRAY} />
+          fill={Colors.SUBTLE} />
         <AnimatedSecondsDisplay seconds={this.timerSecondsAnim} />
       </>
     );

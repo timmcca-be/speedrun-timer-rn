@@ -57,14 +57,14 @@ export class TimerCircles extends PureComponent<IProps> {
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#leftCircleClip)"
-          fill={Colors.RED}
+          fill={Colors.ACCENT}
           opacity={this.props.firstHalfAnim} />
         {/* During the second half, this semicircle turns on
             and starts to get covered. */}
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"
-          fill={Colors.RED}
+          fill={Colors.ACCENT}
           opacity={Animated.subtract(1, this.props.firstHalfAnim)} />
         {/* This group is the line and white semicircle */}
         <AnimatedG
@@ -78,11 +78,11 @@ export class TimerCircles extends PureComponent<IProps> {
           <Circle
             cx={0} cy={0} r={32}
             clipPath="url(#rightCircleClip)"
-            fill={Colors.WHITE} />
+            fill={Colors.BACKGROUND} />
           <Line
             x1={0} y1={0}
             x2={0} y2={-32.3}
-            stroke={Colors.RED}
+            stroke={Colors.ACCENT}
             strokeWidth={1.7}
             strokeLinecap="round" />
         </AnimatedG>
@@ -93,7 +93,7 @@ export class TimerCircles extends PureComponent<IProps> {
         <AnimatedCircle
           cx={0} cy={0} r={31}
           clipPath="url(#rightCircleClip)"
-          fill={Colors.RED}
+          fill={Colors.ACCENT}
           opacity={this.props.firstHalfAnim} />
       </>
     );

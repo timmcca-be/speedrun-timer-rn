@@ -98,13 +98,13 @@ export class TimerImage extends PureComponent<IProps> {
       <Svg width={size} height={size} viewBox="-50 -50 100 100">
         <Circle
           cx={0} cy={0} r={50}
-          fill={Colors.GRAY} />
+          fill={Colors.SUBTLE} />
         <Circle
           cx={0} cy={0} r={46}
-          fill={Colors.BLACK} />
+          fill={Colors.FOREGROUND} />
         <Circle
           cx={0} cy={0} r={43}
-          fill={Colors.WHITE} />
+          fill={Colors.BACKGROUND} />
         <TimerAnimation {...this.props} maxTime={maxTime} size={size} />
         <Ticks timeLabels={timeLabels} />
       </Svg>

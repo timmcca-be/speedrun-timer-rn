@@ -73,7 +73,7 @@ export class SecondsDisplay extends Component<IProps> {
         x={0} y={timeText.length > 2 ? 2.2 : 3.2}
         textAnchor="middle"
         fontFamily="BetecknaLowerCase"
-        fill={Colors.BLACK}
+        fill={Colors.FOREGROUND}
         fontSize={timeText.length > 2 ? 7 : 9}>
        {timeText}
       </Text>

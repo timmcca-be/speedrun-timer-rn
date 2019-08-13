@@ -80,14 +80,14 @@ export class TimeForm extends PureComponent<IProps, IState> {
         {
           this.props.active ? undefined : (<>
             <Text style={{
-                color: Colors.GRAY,
+                color: Colors.SUBTLE,
                 fontFamily: 'BetecknaLowerCase',
                 fontSize: 36,
                 marginBottom: 16,
                 textAlign: 'center',
               }}>
               { timeString.substring(0, colorSwitchIndex) }
-              <Text style={{ color: Colors.BLACK }}>
+              <Text style={{ color: Colors.FOREGROUND }}>
                 { timeString.substring(colorSwitchIndex)
                     + (this.state.inputtingMillis ? millisString : '')
                     + (millisZeros.length === 0 ? 's' : '') }
@@ -118,14 +118,14 @@ export class TimeForm extends PureComponent<IProps, IState> {
         <TouchableOpacity
           onPress={this.props.active ? this.props.halt : this.startTimer}
           style={{
-            backgroundColor: Colors.RED,
+            backgroundColor: Colors.ACCENT,
             borderRadius: 35,
             height: 70,
             justifyContent: 'center',
             width: 70,
           }}>
           <Text style={{
-              color: Colors.WHITE,
+              color: Colors.BACKGROUND,
               fontFamily: 'BetecknaLowerCase',
               fontSize: 20,
               marginBottom: 5,

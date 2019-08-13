@@ -19,7 +19,7 @@ export class KeypadButton extends PureComponent<IProps> {
     return (
       <TouchableOpacity onPress={this.props.onPress}
         style={{
-          backgroundColor: Colors.BLACK,
+          backgroundColor: Colors.FOREGROUND,
           borderRadius: 10,
           height: 50,
           justifyContent: 'center',
@@ -27,7 +27,7 @@ export class KeypadButton extends PureComponent<IProps> {
           width: '27%',
         }}>
         <Text style={{
-            color: Colors.WHITE,
+            color: Colors.BACKGROUND,
             fontFamily: 'BetecknaLowerCase',
             fontSize: 20,
             marginBottom: 5,
